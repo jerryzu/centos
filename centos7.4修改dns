@@ -1,0 +1,21 @@
+方法一：
+CentOS7启用了新的dns管理工具
+
+查看当前启动的连接
+nmcli  connection show
+
+更改网卡ens33的dns
+nmcli con mod ens33 ipv4.dns     xxxxxxx
+
+配置生效
+nmcli con up ens33 
+
+方法二：
+继续使用/etc/resolv.conf
+
+修改 /etc/NetworkManager/NetworkManager.conf 文件，在main部分添加 “dns=none” 选项：(不操作这一步，直接修改/etc/resolv.conf，重启网卡又会变回改之前的配置）
+
+手工修改 /etc/resolv.conf   (此处修改的是自己的dns服务器IP）
+
+重启网卡 
+systemctl restart NetworkManager.service
