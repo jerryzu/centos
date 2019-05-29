@@ -22,3 +22,11 @@ systemctl restart NetworkManager.service
 
 linux追踪路由
 traceroute www.sina.com.cn
+
+nmcli connection show HUAWEI-B311-BD06 | grep DNS
+设置DNS
+nmcli con mod HUAWEI-B311-BD06 ipv4.dns "114.114.114.114 8.8.8.8"
+重启网络
+nmcli con up HUAWEI-B311-BD06
+显示更新
+nmcli connection show HUAWEI-B311-BD06 | grep DNS
