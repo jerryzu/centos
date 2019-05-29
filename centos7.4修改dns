@@ -19,3 +19,6 @@ nmcli con up ens33 
 
 重启网卡 
 systemctl restart NetworkManager.service
+
+linux追踪路由
+traceroute www.sina.com.cn
