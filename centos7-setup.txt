@@ -52,6 +52,12 @@ ps -ef | grep openvpn | awk '{print $2}' | xargs kill -9
 yum install tree
 yum install -y git
 yum install -y mariadb-server.x86_64 mariadb.x86_64 
+
+--表名存储为给定的大小写但是比较的时候是小写的
+/etc/my.cnf.d/server.cnf
+[mysqlld]
+lower_case_table_names=1
+
 systemctl start mariadb
 systemctl enable mariadb
 mysql_secure_installation 
