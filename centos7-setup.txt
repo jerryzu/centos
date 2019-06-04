@@ -125,3 +125,7 @@ https://blog.csdn.net/aqzwss/article/details/51134591
 
 yum localinstall -y XMind-ZEN-for-Linux-64bit.rpm
 
+
+uname -r 
+grub2-editenv list
+rpm -qa |grep kernel-[0-9]
