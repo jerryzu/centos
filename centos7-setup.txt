@@ -129,3 +129,6 @@ yum localinstall -y XMind-ZEN-for-Linux-64bit.rpm
 uname -r 
 grub2-editenv list
 rpm -qa |grep kernel-[0-9]
+
+alternatives --install /usr/bin/java java /tools/jdk8/bin/java 4
+alternatives --config java
