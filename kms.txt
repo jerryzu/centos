@@ -27,3 +27,10 @@ cscript ospp.vbs /inpkey:VYBBJ-TRJPB-QFQRF-QFT4D-H3GVB
 cscript ospp.vbs /sethst:192.168.8.111
 cscript ospp.vbs /act
 cscript ospp.vbs /dstatus
+
+二、Windows Server 2019批量授权版KMS客户端安装密钥Volume:GVLK
+Windows Server 2019 Datacenter	[Key]：WMDGN-G9PQG-XVVXX-R3X43-63DFG
+Windows Server 2019 Standard	[Key]：N69G4-B89J2-4G8F4-WWYCC-J464C
+Windows Server 2019 Essential	[Key]：WVDHN-86M7X-466 P 6-VHXV7-YY726
+
+
