@@ -1,0 +1,31 @@
+%attr(0664, root, root) "/usr/share/applications/baidunetdisk.desktop"
+%attr(0664, root, root) "/usr/share/icons/hicolor/1024x1024/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/128x128/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/16x16/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/24x24/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/256x256/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/32x32/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/48x48/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/512x512/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/64x64/apps/baidunetdisk.png"
+%attr(0664, root, root) "/usr/share/icons/hicolor/96x96/apps/baidunetdisk.png"
+
+%post -p /bin/sh
+update-desktop-database
+%postun -p /bin/sh
+#!/bin/bash
+
+# Delete the link to the binary
+rm -f '/usr/local/bin/baidunetdisk'
+%changelog
+
+[Desktop Entry]
+Name=baidunetdisk
+Comment=百度网盘
+Exec="/opt/baidunetdisk/baidunetdisk" %U
+Terminal=false
+Type=Application
+Icon=baidunetdisk
+StartupWMClass=baidunetdisk
+MimeType=x-scheme-handler/baiduyunguanjia;
+Categories=Network;
