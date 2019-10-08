@@ -1,0 +1,213 @@
+nginx https
+2、生成密钥和CA证书
+#openssl version
+
+OpenSSL 1.0.1e-fips 11 Feb 2013
+
+#nginx-v
+
+-with-http_ssl_module
+
+步骤一、生成key密钥
+
+
+复制代码
+[root@web-01 ssl_key]# openssl genrsa -idea -out lewen.key 1024
+Generating RSA private key, 1024 bit long modulus
+......................................++++++
+..............................++++++
+e is 65537 (0x10001)
+Enter pass phrase for lewen.key:                #密码要写.或者不写
+Verifying - Enter pass phrase for lewen.key:
+复制代码
+步骤二、生成证书签名请求文件（csr文件）
+
+
+复制代码
+[root@web-01 ssl_key]# openssl req -new -key lewen.key -out lewen.csr
+Enter pass phrase for lewen.key:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:CN
+State or Province Name (full name) []:SZ
+Locality Name (eg, city) [Default City]:futian
+Organization Name (eg, company) [Default Company Ltd]:fadewalk
+Organizational Unit Name (eg, section) []:fadewalk.com
+Common Name (eg, your name or your server's hostname) []:fadewalk.com
+Email Address []:fadewalk@163.com
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:        #没有要求就为空
+An optional company name []:
+[root@web-01 ssl_key]# ls
+lewen.csr lewen.key
+复制代码
+步骤三、生成证书签名文件（CA文件）
+
+
+复制代码
+[root@web-01 ssl_key]# openssl x509 -req -days 3650 -in lewen.csr -signkey lewen.key -out lewen.crt
+Signature ok
+subject=/C=CN/ST=SZ/L=futian/O=fadewalk/OU=fadewalk.com/CN=fadewalk.com/emailAddress=fadewalk@163.com
+Getting Private key
+Enter pass phrase for lewen.key:
+[root@web-01 ssl_key]# ls
+lewen.crt lewen.csr lewen.key
+复制代码
+
+
+反回顶部
+3、Nginx的HTTPS语法配置
+  
+复制代码
+  例子
+  server {
+        listen              443 ssl;
+        keepalive_timeout   70;
+
+        ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers         AES128-SHA:AES256-SHA:RC4-SHA:DES-CBC3-SHA:RC4-MD5;
+        ssl_certificate     /usr/local/nginx/conf/cert.pem;
+        ssl_certificate_key /usr/local/nginx/conf/cert.key;
+        ssl_session_cache   shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        ...
+    }
+
+[root@web-01 ~]# nginx -s reload
+
+nginx: [warn] the "ssl" directive is deprecated, use the "listen ... ssl" directive instead in /etc/nginx/conf.d/cp4/test_https.conf:4
+
+key设置了密码，每次重启都要输入密码很麻烦
+复制代码
+反回顶部
+4、场景-配置苹果要求的证书
+a、服务器所有的连接使用TLS1.2以上版本（openssl 1.0.2）
+
+b、HTTPS证书必须使用SHA 256以上哈希算法签名
+
+C、HTTPS证书必须使用RSA 2048位或ECC256位以上公钥算法
+
+d、使用前向加密技术
+
+查看证书信息
+
+[root@web-01 ssl_key]# openssl x509 -noout -text -in ./lewen_apple.crt
+
+一键生成证书
+
+ View Code
+nginx 1.15 以后开启ssl的正确姿势
+
+2019/06/17 17:06:54 [warn] 36807#36807: the "ssl" directive is deprecated, use the "listen ... ssl" directive instead in /etc/nginx/conf.d/cp4/test_https.conf:4
+不推荐使用“ssl”指令，而是在/etc/nginx/conf.d/cp4/test_https中使用“listen ... ssl”指令。CONF：4
+ssl on 这种方式开启ssl已经不行了
+listen 443 ssl     采用这种
+测试网页自己生成的证书，会被提示不安全
+
+d9660f00-78f6-4526-82ec-0fb3d764a307
+
+去掉之前分步生成输入的保护码
+
+openssl rsa -in ./lewen.key -out ./lewen_nopassword.key
+
+
+
+反回顶部
+5、HTTPS服务优化
+方法一、激活keepalive长连接
+
+方法二、设置ssl session缓存
+
+复制代码
+server {
+    listen 443 ssl;
+    server_name web01.fadewalk.com;
+    # ssl on;  nginx 1.15之后这样配置无效
+
+    keepalive_timeout 100;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    ssl_certificate /etc/nginx/ssl_key/lewen_apple.crt;
+    ssl_certificate_key /etc/nginx/ssl_key/lewen.key;
+    #ssl_certificate_key /etc/nginx/ssl_key/lewen_nopass.key;
+
+    location / {
+        root  /opt/app/code/cp4/code;
+        index lewen.html lewen.htm;
+    }
+}
+
+yum install nginx-module-geoip
+
+用到的ip数据库
+
+链接：https://pan.baidu.com/s/1KcFhouFhP7jQOEZaZutMtw  提取码：okjp
+
+nginx.conf
+load_module modules/ngx_http_geoip_module.so;   #导入模块
+load_module modules/ngx_stream_geoip_module.so;
+​
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+include /usr/share/nginx/modules/*.conf;
+events {
+    worker_connections 1024;
+}
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log  /var/log/nginx/access.log  main;
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+​
+    include /etc/nginx/conf.d/cp5/*.conf;
+}
+​
+
+cat conf.d/cp5/test_geoip.conf
+geoip_country /etc/nginx/geoip/GeoIP.dat;       #
+geoip_city /etc/nginx/geoip/GeoLiteCity.dat;
+
+# geoip_country /tmp/geoip/GeoLite2-Country/GeoLite2-Country.mmdb;
+# geoip_city /tmp/geoip/GeoLite2-City/GeoLite2-City.mmdb;
+
+server {
+    listen       80;
+    server_name  web01.fadewalk.com;​
+
+    location / {
+        if ($geoip_country_code != CN) {
+            return 403;
+        }
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+   location /myip {
+        default_type text/plain;
+        return 200 "$remote_addr $geoip_country_name $geoip_country_code $geoip_city";
+   }
+
+}
+
+nginx拒绝或允许指定IP,是使用模块HTTP访问控制模块（HTTP Access）.
+控制规则按照声明的顺序进行检查，首条匹配IP的访问规则将被启用。 location / {
+  deny    192.168.1.1;
+  allow   192.168.1.0/24;
+  allow   10.1.1.0/16;
+  deny    all;
+}
+上面的例子中仅允许192.168.1.0/24和10.1.1.0/16网络段访问这个location字段，但192.168.1.1是个例外。
+注意规则的匹配顺序，如果你使用过apache你可能会认为你可以随意控制规则的顺序并且他们能够正常的工作，但实际上不行。
