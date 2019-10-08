@@ -1,0 +1,36 @@
+下载最新的压缩包： https://github.com/Wind4/vlmcsd/releases
+
+wget -c https://github.com/Wind4/vlmcsd/releases/download/svn1112/binaries.tar.gz
+
+选择自己对应的系统版本，我这里选择Linux，选择Intel处理器，使用static中的vlmcsd-x64-musl-static，将文件拷贝至自己存放的目录：
+
+#mkdir /opt/kms
+#cp vlmcsd-x64-musl-static /opt/kms
+#chmod +x /opt/kms/vlmcsd-x64-musl-static
+
+运行vlmcsd并在防火墙上开启端口
+# ./vlmcsd-x64-musl-static #如果没有报错，就运行成功了，如果报错，检查端口占用
+
+------------centos开启端口对外访问----------------------------------
+# firewall-cmd --zone=public --add-port=1688/tcp --permanent
+# firewall-cmd --reload
+
+telnet 192.168.8.111 1688
+
+slmgr /ipk DCPHK-NFMTC-H88MJ-PFHPY-QJ4BJ #配置系统序列号
+slmgr /skms 192.168.8.111          #配置KMS服务器地址
+slmgr /ato                         #激活系统
+slmgr /xpr                         #查看系统激活到期时间
+slmgr /dlv                         #查看授权详细信息
+
+cscript ospp.vbs /inpkey:VYBBJ-TRJPB-QFQRF-QFT4D-H3GVB
+cscript ospp.vbs /sethst:192.168.8.111
+cscript ospp.vbs /act
+cscript ospp.vbs /dstatus
+
+二、Windows Server 2019批量授权版KMS客户端安装密钥Volume:GVLK
+Windows Server 2019 Datacenter	[Key]：WMDGN-G9PQG-XVVXX-R3X43-63DFG
+Windows Server 2019 Standard	[Key]：N69G4-B89J2-4G8F4-WWYCC-J464C
+Windows Server 2019 Essential	[Key]：WVDHN-86M7X-466 P 6-VHXV7-YY726
+
+
