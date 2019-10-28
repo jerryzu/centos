@@ -1,0 +1,35 @@
+--文件位置
+[cognos@DEV-COGNOSSRV configuration]$ cd /alidata/cognos/c10_64/configuration
+
+-- 内容位置
+[cognos@DEV-COGNOSSRV configuration]$ grep -rn -B10 -A10 '10.19.0.22:8080' ./cogstartup.xml
+  <crn:value xsi:type="xsd:string">IPv4</crn:value>
+</crn:parameter>
+<!-- gateway: Specifies the URI to the gateway.  -->
+<!-- The gateway must be located on the same computer as a Web server. If you are using 
+     ISAPI, change 'cognos.cgi' to 'cognosisapi.dll'. If you are using apache modules, 
+     change 'cognos.cgi' to the alias name defined in Apache Web Server configuration 
+     file (httpd.conf). Use the 'https' or 'http' protocol to select SSL or non-SSL communication. 
+     The host name portion of the gateway URI must be changed from localhost to an IP 
+     address or a network host name.  -->
+<crn:parameter name="gateway">
+  --修改前
+  <crn:value xsi:type="xsd:anyURI">http://10.19.2.22:9300/p2pd/servlet/dispatch</crn:value>
+  --修改后
+  <crn:value xsi:type="xsd:anyURI">http://10.19.0.22:8080/p2pd/servlet/dispatch</crn:value>
+</crn:parameter>
+<!-- gatewayNamespace: Specifies the Namespace ID of the authentication provider to which 
+     the gateway connects to verify user credentials.  -->
+<!-- Use this property so that the gateway connects to one namespace. Users logged onto 
+     the Web server where the gateway is located are not prompted to choose an authentication 
+     source. By default, the gateway uses all configured namespaces and you are prompted 
+     to select a namespace.  -->
+<crn:parameter name="gatewayNamespace">
+  <crn:value xsi:type="xsd:string"></crn:value>
+</crn:parameter>
+--重启cognos服务
+[cognos@DEV-COGNOSSRV configuration]$ cd /alidata/cognos/c10_64/bin64
+[cognos@DEV-COGNOSSRV configuration]$ ps -ef | grep /alidata/cognos | awk '{print $2}' | xargs kill -9
+[cognos@DEV-COGNOSSRV bin64]$ ./cogconfig.sh -s
+
+mysqldump --set-gtid-purged=off -hrm-bp19v63q682asdrja.mysql.rds.aliyuncs.com -utaipingbi_etl -p'Tpstic123456' -t -w"pt=20191013000000" tpedw ods_cthx_web_ply_base | gzip > tpedw-`date +%Y-%m-%d`.sql.gz

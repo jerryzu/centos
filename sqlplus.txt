@@ -1,0 +1,13 @@
+sqlplus64 tpstic_user/QAZ_2wsx3edc@10.1.97.62:1521/tpinfor
+
+
+SQL> SQL> show linesize
+SQL> set linesize 800;
+SQL> col index_id	 for 99;
+SQL> col index_id	 format a20;
+SQL> col index_name	 format a20;
+SQL> col report_date	 format a20;
+SQL> col index_value	 format a20;
+SQL> col create_time	 format a20;
+SQL> col update_time format a20;
+SQL> select 1, * from t_ods_tpstic_irr_index_detail;

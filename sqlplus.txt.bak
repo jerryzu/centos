@@ -1,0 +1,12 @@
+sqlplus64 tpstic_user/QAZ_2wsx3edc@10.1.97.62:1521/tpinfor
+
+
+SQL> col INDEX_ID format A20;
+SQL> select index_id from t_ods_tpstic_irr_index_detail;
+
+ col NDEX_ID	 format A20;
+ col NDEX_NAME	 format A20;
+ col EPORT_DATE	 format A20;
+ col NDEX_VALUE	 format A20;
+ col REATE_TIME	 format A20;
+ col UPDATE_TIME format A20;

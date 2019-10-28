@@ -132,14 +132,3 @@ rpm -qa |grep kernel-[0-9]
 
 alternatives --install /usr/bin/java java /tools/jdk8/bin/java 4
 alternatives --config java
-
-
-一、系统网络管理器NetworkManager自带的nmcli命令
-nmcli dev wifi con “WiFi名称” password “WiFi密码” name “连接名称”  # 配置无线网卡
-nmcli c del “连接名称”   # 删除连接
-注：nmcli 命令可查看无线网卡是否已经成功驱动，如果看不到无线网卡名称，安装pciutils包，利用lspci命令查看自己的网卡型号，然后下载相应的驱动程序进行安装
-
-二、使用wpa_supplicant
-systemctl stop NetworkManager    #关闭NetworkManager防止与wpa_supplicant冲突
-
-wpa_supplicant -B -i 无线网卡名称 -c <(wpa_passphrase "WiFi名称" "WiFi密码") #配置无线

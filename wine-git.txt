@@ -1,0 +1,9 @@
+C:\Users\jerry>git config --global user.name jerryzu
+C:\Users\jerry>git config --global jerry.zu@hotmail.com
+D:\work>git clone https://github.com/jerryzu/aml.git
+
+ VSCode配置
+打开vscode
+选择配置
+搜索：git.path
+在用户设置中添加："git.path": "C:\\Program Files\\Git\\bin\\git.exe"

@@ -1,0 +1,142 @@
+CREATE TABLE `ods_gl_web_report_index` (
+  `id` varchar(25) NOT NULL COMMENT '主键，唯一标识符',
+  `index_code` varchar(15) DEFAULT NULL COMMENT '指标代码：例如61150096，可参考《03-保险统计制度统计指标_101125修订》',
+  `frequency` char(1) DEFAULT NULL COMMENT '报送频率（1位字符）：0快报、1月报、2季报、3半年报、4年报',
+  `dept` varchar(15) DEFAULT NULL COMMENT '报送机构编码：由保险公司提供',
+  `frequency_val` decimal(30,2) DEFAULT NULL COMMENT '指标值',
+  `year` char(4) DEFAULT NULL COMMENT '报送年份',
+  `month` char(2) DEFAULT NULL COMMENT '报送月份',
+  `crt_tm` datetime DEFAULT NULL COMMENT '创建时间',
+  `batch_id` varchar(25) DEFAULT NULL COMMENT '上报批次',
+  `index_name` varchar(120) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL,
+  `PT` varchar(20) NOT NULL COMMENT '分区字段'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+ PARTITION BY RANGE  COLUMNS(`pt`)
+(PARTITION `pt20180331000000` VALUES LESS THAN ('20180331999999') ENGINE = InnoDB,
+ PARTITION `pt20180630000000` VALUES LESS THAN ('20180630999999') ENGINE = InnoDB,
+ PARTITION `pt20180930000000` VALUES LESS THAN ('20180930999999') ENGINE = InnoDB,
+ PARTITION `pt20181231000000` VALUES LESS THAN ('20181231999999') ENGINE = InnoDB,
+ PARTITION `pt20190331000000` VALUES LESS THAN ('20190331999999') ENGINE = InnoDB,
+ PARTITION `pt20190630000000` VALUES LESS THAN ('20190630999999') ENGINE = InnoDB,
+ PARTITION `pt20190930000000` VALUES LESS THAN ('20190930999999') ENGINE = InnoDB);
+
+drop TABLE `rpt_jtfk_tpstic_irr_index_detail_qs`;
+
+create table `rpt_jtfk_tpstic_irr_index_detail_qs` (
+  `index_id` varchar(40) default null comment '指标编号',
+  `index_name` varchar(400) default null comment '指标名称',
+  `report_date` varchar(40) default null comment '报告期',
+  `index_value` varchar(1000) default null comment '因子值',
+  `create_time` varchar(40) default null comment '创建时间',
+  `update_time` varchar(40) default null comment '更新时间',
+  `pt` varchar(15) default null comment '分区字段'
+) engine=innodb default charset=utf8
+ partition by range  columns(`pt`)
+(partition `pt20190310000000` values less than ('20190331999999') engine = innodb,
+ partition `pt20190630000000` values less than ('20190630999999') engine = innodb,
+ partition `pt20190930000000` values less than ('20190930999999') engine = innodb)
+
+
+
+以下的sql最好替换一下使用自动执行，因为分区不能使用变量
+TPT_OR05_12,非车险原保费收入,
+TPT_OR12_26_2,当期保费收入
+东杰
+聂东杰(聂东杰)
+select 'lastday' 报送日期,sum(income_q) 当季保费收入,sum(income_12) 滚动12月保费收入
+from 
+(
+-- 本年保费收入 
+select frequency_val income_q,frequency_val income_12
+from ods_gl_web_report_index PARTITION(pt20190924000000)
+where frequency in (  '2','3','4')    
+and YEAR = '2019'   --  lastday_yy
+AND MONTH = '06'    --  lastday_mm
+AND dept = 'H90000000'  
+and index_code='a60320001' 
+union ALL 
+select -frequency_val,0
+from ods_gl_web_report_index PARTITION(pt20190924000000)
+where frequency in (  '2','3','4')    
+and YEAR = '2019'    --  lastday-3m_yy
+AND MONTH = '03'     --  lastday-3m_mm
+AND dept = 'H90000000'  
+and index_code='a60320001' 
+union ALL 
+select 0, -frequency_val
+from ods_gl_web_report_index PARTITION(pt20190924000000)
+where frequency in (  '2','3','4')    
+and YEAR = '2018'    --  lastday-12m_yy
+AND MONTH = '06'     -- lastday-12m_mm
+AND dept = 'H90000000'  
+and index_code='a60320001' 
+union ALL 
+select 0, frequency_val
+from ods_gl_web_report_index PARTITION(pt20190924000000)
+where frequency in (  '2','3','4')    
+and YEAR = '2018'    --  lastday-12m_yy
+AND MONTH = '12'     --   12 
+AND dept = 'H90000000'  
+and index_code='a60320001' 
+) aa
+
+drop table  if exists tmp;
+set @ms=CONCAT('CREATE temporary table tmp select index_code from ods_gl_web_report_index partition (pt',(date_format(DATE_ADD(date'{lastday}',INTERVAL 1 DAY) ,'%Y%m%d')),'000000)');
+PREPARE stmt1 FROM @ms;
+EXECUTE stmt1;
+DEALLOCATE PREPARE stmt1 ;
+
+vi rpt_jtfk_fin_cost_qs.sql
+vi ods_gl_web_report_index_PT1.sql
+问题datax的取数，与分区清空
+
+select frequency_val income_q,frequency_val income_12 from ods_gl_web_report_index partition(pt20190924000000) where frequency in ('2','3','4') and dept = 'H90000000' and index_code='a60320001' and year = '2019' /* lastday_yy     */ and month = '06' /* lastday_mm */
+union all 
+select -frequency_val income_q,0 income_12            from ods_gl_web_report_index partition(pt20190924000000) where frequency in ('2','3','4') and dept = 'H90000000' and index_code='a60320001' and year = '2019' /* lastday-3m_yy  */ and month = '03' /* lastday-3m_mm */
+union all 
+select 0 income_q, -frequency_val income_12           from ods_gl_web_report_index partition(pt20190924000000) where frequency in ('2','3','4') and dept = 'H90000000' and index_code='a60320001' and year = '2018' /* lastday-12m_yy */ and month = '06' /* lastday-12m_mm */
+union all 
+select 0 income_q, frequency_val income_12            from ods_gl_web_report_index partition(pt20190924000000) where frequency in ('2','3','4') and dept = 'H90000000' and index_code='a60320001' and year = '2018' /* lastday-12m_yy */ and month = '12' /* 12 */
+
+
+mysql> PREPARE pr1 FROM 'SELECT ?+?';
+
+Query OK, 0 rows affected (0.01 sec)
+
+Statement prepared
+
+ 
+
+mysql> SET @a=1, @b=10 ;
+
+Query OK, 0 rows affected (0.00 sec)
+
+ 
+
+mysql> EXECUTE pr1 USING @a, @b;
+
++------+
+
+| ?+? |
+
++------+
+
+| 11 |
+
++------+
+
+1 row in set (0.00 sec)
+
+ 
+
+mysql> EXECUTE pr1 USING 1, 2; -- 只能使用用户变量传递。
+
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the 
+
+right syntax to use near '1, 2' at line 1
+
+ 
+
+mysql> DEALLOCATE PREPARE pr1;
+
+Query OK, 0 rows affected (0.00 sec)

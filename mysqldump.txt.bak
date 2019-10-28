@@ -27,6 +27,4 @@ cthx: 传统核心
 gl: 总账
 amltp: 反洗钱(银保监会)
 
-alter table     `tpedw`.`ods_cthx_t_banktransactions` rename to ods_fund_t_banktransactions;
-
-
+alter table     `tpedw`.`ods_cthx_t_banktransactions` rename to ods_cthx_t_banktransactionsddd
