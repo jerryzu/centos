@@ -1,0 +1,6 @@
+
+# 执行命令将conf下文件加入不提交队列
+git update-index --assume-unchanged conf/*
+
+# 执行命令将db.php取消加入不提交队列
+git update-index --no-assume-unchanged  conf/*
