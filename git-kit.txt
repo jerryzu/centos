@@ -4,3 +4,8 @@ git update-index --assume-unchanged conf/*
 
 # 执行命令将db.php取消加入不提交队列
 git update-index --no-assume-unchanged  conf/*
+
+git remote -v
+git remote remove origin 
+git remote add origin ssh://git@wine-sha.vicp.net:36353/app/gitrepo/aml-mini.git
+git push --set-upstream origin master
