@@ -1,0 +1,23 @@
+https://www.kernel.org/doc/Documentation/sysctl/fs.txt
+fs.nr_open = 100000000
+nofile的值一定不能高于nr_open
+net.ipv4.ip_local_port_range   = 5222, 65535 ##Linux 系统设置了随机使用的端口范围
+net.ipv4.ip_local_reserved_ports = 5222, 5269, 5280-5390 ##随机使用的端口排除占用
+
+ 测试方法：nc
+nc -l -4 -p 40000 -k    启动一个服务端，监听40000端口
+nc  ip  40000             客户端建立连接，访问服务端
+
+[jerry@j ~]$ ls /proc/31817/fd/ | wc -l
+[jerry@j ~]$ cat /proc/31817/limits 
+
+[root@j jerry]# more /etc/security/limits.conf | grep nofile
+#        - nofile - max number of open file descriptors
+* soft nofile 65535
+* hard nofile 65535
+* soft noproc 65535
+* hard noproc 65535
+
+[root@j jerry]# more /etc/security/limits.d/20-nproc.conf | grep jerry
+jerry      soft    nproc     81920
+实际max user processes              (-u) 30991不知什么地方限制了
