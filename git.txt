@@ -16,3 +16,7 @@ git fetch 更新远程仓库文件
 git diff master origin/master 本地文件和远程仓库文件进行对比
 git merge origin/master 自动合并
 根据需求手动删除不必要的代码，修改完成git push到远程仓库
+
+提交冲突的解决
+D:\work\aml-sql> git fetch
+D:\work\aml-sql> git merge

@@ -7,16 +7,6 @@ where table_schema='tpedw'
 	and (table_name like 'ods_amltp%' or table_name like 'ods_cthx%')
 order by table_name
 
-
-select concat('mysqldump --set-gtid-purged=OFF -hrm-bp19v63q682asdrja.mysql.rds.aliyuncs.com -utaipingbi_etl -p''Tpstic123456'' -d tpedw '
-	-- ,chr(13)
-	,group_concat(distinct table_name separator ' ')
-	,'| gzip > tpedw-ddl`date +%Y-%m-%d`.sql.gz') exp_data
-from information_schema.tables
-where table_schema='tpedw' 
-        and (table_name like '%rpt_fxq%' or table_name like '%edw_cust%')
-        
-
 select 'alter table', table_name, concat(' add partition (partition pt', dt, '000000 values less than (''', dt, '999999''));') add_part
 from information_schema.tables m, (select date_format(date_add(now(), interval -1 day),'%Y%m%d') dt) v
 where table_schema = 'tpedw' 

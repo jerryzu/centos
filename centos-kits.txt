@@ -1,0 +1,3 @@
+解决“/bin/bash^M: bad interpreter: No such file or directory”
+（2）使用sed命令sed -i "s/\r//" filename  或者 sed -i "s/^M//" filename直接替换结尾符为unix格式
+（3）vi filename打开文件，执行 : set ff=unix 设置文件为unix，然后执行:wq，保存成unix格式。
