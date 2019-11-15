@@ -1,3 +1,6 @@
+重组分区
+alter table rpt_fxq_tb_company_ms reorganize partition report into(partition pt{workday}000000 values less than('{workday}999999'), partition report values less than(maxvalue));
+
 ﻿备份测试数据源，供测试使用
 select concat('mysqldump --set-gtid-purged=OFF -hrm-bp19v63q682asdrja.mysql.rds.aliyuncs.com -utaipingbi_etl -p''Tpstic123456'' -t -w"pt=20190928000000" tpedw '
 	-- ,chr(13)
@@ -5,7 +8,7 @@ select concat('mysqldump --set-gtid-purged=OFF -hrm-bp19v63q682asdrja.mysql.rds.
 	,'| gzip > tpedw-`date +%Y-%m-%d`.sql.gz') exp_data
 from information_schema.tables 
 where table_schema='tpedw'  
-	and (table_name like 'ods_amltp%' or table_name like 'ods_cthx%')
+      and (table_name like 'ods_amltp%' or table_name like 'ods_cthx%' or table_name like 'ods_fund%')
 order by table_name
 
 备份AML表结构，防止被误删除
