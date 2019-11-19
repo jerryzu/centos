@@ -76,6 +76,22 @@ $ git remote rename pb paul
 $ git remote
 $ git remote rm paul
 
+导出新分支
+[jerry@j aml-mini]$ git branch -a
+* master
+  remotes/github/master
+  remotes/origin/master
+[jerry@j aml-mini]$ git fetch github
+来自 https://github.com/jerryzu/aml-mini
+   4ddc5fc..51cfa2f  master     -> github/master
+ * [新分支]          nopart     -> github/nopart
+[jerry@j aml-mini]$ git branch -a
+* master
+  remotes/github/master
+  remotes/github/nopart
+  remotes/origin/master
+[jerry@j aml-mini]$ git checkout -b nopart github/nopart
+分支 'nopart' 设置为跟踪来自 'github' 的远程分支 'nopart'。切换到一个新分支 'nopart'
 
 你可以在合并冲突后的任意时刻使用 git status 命令来查看那些因包含合并冲突而处于未合并（unmerged）状态的文件：
 
