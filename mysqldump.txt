@@ -47,3 +47,12 @@ amltp: 反洗钱(银保监会)
 alter table     `tpedw`.`ods_cthx_t_banktransactions` rename to ods_fund_t_banktransactions;
 
 
+备份AML数据结构
+select concat('mysqldump --set-gtid-purged=OFF -hrm-bp19v63q682asdrja.mysql.rds.aliyuncs.com -utaipingbi_etl -p''Tpstic123456'' -d tpedw '
+	-- ,chr(13)
+	,group_concat(distinct table_name separator ' ')
+	,'| gzip > tpedw-ddl`date +%Y-%m-%d`.sql.gz') exp_data
+from information_schema.tables 
+where table_schema='tpedw'  
+      and table_name like 'rpt_fxq_tb%'
+order by table_name

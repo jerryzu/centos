@@ -27,3 +27,59 @@ git remote -v
 git remote remove origin 
 git remote add origin ssh://git@wine-sha.vicp.net:36353/app/gitrepo/aml-mini.git
 git push --set-upstream origin master
+
+4.分支操作
+创建分支
+git branch <branchname>
+检出分支
+git checkout <branchname>
+查看分支分叉历史
+git log --oneline --decorate --graph --all
+
+新建分支并同时切换
+git checkout -b <branchname>
+same as
+git branch <branchname>
+git checkout <branchname>
+
+工作分支
+git checkout -b iss53
+
+切出主线分支
+git checkout master
+创建hotfix分支
+git checkout -b hotfix
+git commit -a -m""
+git push --set-upstream origin hotfix
+
+新建一个远程分支
+比如新建了一个叫dev的分支，而github网站上还没有，可以直接：
+git push -u origin dev
+
+重新切出主线分支
+git checkout master
+合并到主线分支
+git merge hotfix
+
+删除hotfix分支
+git branch -d hotfix
+
+切回工作分支
+git checkout iss53
+
+git remote add pb https://github.com/paulboone/ticgit #pb别名
+git remote -v
+git fetch pb
+
+远程仓库的移除与重命名
+$ git remote rename pb paul
+$ git remote
+$ git remote rm paul
+
+
+你可以在合并冲突后的任意时刻使用 git status 命令来查看那些因包含合并冲突而处于未合并（unmerged）状态的文件：
+
+9.git svn
+git svn clone file:///tmp/test-svn -T trunk -b branches -t tags
+git svn rebase
+git svn dcommit
