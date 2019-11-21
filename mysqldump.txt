@@ -33,6 +33,13 @@ where table_schema = 'tpedw'
         and (table_name like '%rpt_fxq%' or table_name like '%edw_cust%')
 and (table_name not like 'rpt_fxq_manual_%' and table_name not like 'x%' and table_name not like 's%')
 
+AML新数据生成前增加分区(仅客户主题)
+select 'alter table', table_name, concat(' add partition (partition pt', dt, '000000 values less than (''', dt, '999999''));') add_part
+from information_schema.tables m, (select date_format(date_add(now(), interval -1 day),'%Y%m%d') dt) v
+where table_schema = 'tpedw' 
+        and table_name like '%edw_cust%'
+        and (table_name not like 'x%' and table_name not like 's%')
+
 mysql -u"tp_admin" -h"rm-j5efs4eax4128t19u.mysql.rds.aliyuncs.com" -p"9Uu@8Af&" -D tpedw <$1 1>${logFileName} 2>${errFileName}
 
 mysqldump  --no-data --set-gtid-purged=OFF -hrm-bp1k9p25tjq1d86i9.mysql.rds.aliyuncs.com -utpadmin_read -pTpstic123456 nvhlclm web_bat_data> web_bat_data.sql

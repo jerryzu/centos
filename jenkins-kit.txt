@@ -1,0 +1,40 @@
+在Jenkins上，打开Manage Jenkins，打开Jenkins-CLI。
+
+下载jenkins-cli.jar，按照Jenkins-CLI页面的指引来操作：
+
+# 导出一个job
+java -jar jenkins-cli.jar -s http://192.168.37.131:8080/ get-job myjob > myjob.xml
+# 导入一个jobs
+java -jar jenkins-cli.jar -s http://192.168.37.131:8080/ get-job myjob < myjob.xml
+
+两步解决问题
+1. 系统管理 -> 插件管理 -> 安装插件gitlab hook
+这里写图片描述
+2. 系统管理 -> 系统设置 -> 去掉 Enable authentication for ‘/project’ end-point
+
+拷贝到远程,全局设置
+Publish over SSH
+SSH Servers	
+SSH Server Name: tpodps
+Hostname: 10.19.2.21
+Username: tpodps
+Remote Directory:/alidata/workspace/aml/upgrade
+
+aml-mini
+
+源码管理
+ Git	
+Repositories	
+Repository URL: https://github.com/jerryzu/aml-mini.git/
+Branches to build: 指定分支*/nopart
+
+构建
+
+Send files or execute commands over SSH
+SSH Publishers	
+SSH Server
+Name: tpodps
+Transfers	
+Transfer Set
+Source files: sql/*.sql,bin/*
+Exec command: tar -czvf /alidata/workspace/aml/upgrade/sp.tar.gz /alidata/workspace/aml/upgrade/* ##有问题，会包函路径
