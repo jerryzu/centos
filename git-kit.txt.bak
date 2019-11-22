@@ -99,8 +99,3 @@ $ git remote rm paul
 git svn clone file:///tmp/test-svn -T trunk -b branches -t tags
 git svn rebase
 git svn dcommit
-
-10.比较本地和远程的区别
-git diff <localbranch> <remote/branch>
-比如我的本地分支名为dev，远程分支名为dev。
-git diff dev origin/dev
