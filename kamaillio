@@ -1,0 +1,141 @@
+搭建kamaillio服务器
+一。编译源码并修改配置文件
+安装mysql
+yum -y install MariaDB-server MariaDB-client 
+yum install -y mariadb-devel  
+yum install -y mariadb-libs  
+yum install -y mariadb  
+systemctl start mariadb 
+
+1.1克隆源码并编译
+git clone --recursive https://github.com/theblackworld/kamailio  
+cd kamailio 
+make cfg 
+vim src/modules.lst 
+找到include_modules=，
+修改为：
+include_modules= db_mysql 
+make all & make install
+
+1.2 修改配置文件
+cd /usr/local/etc/kamailio 
+1.2.1 修改kamailli.cfg
+vim kamailli.cfg
+顶部添加
+#!define WITH_MYSQL 
+#!define WITH_AUTH 
+#!define WITH_USRLOCDB
+#!define WITH_NAT 
+#!define WITH_DEBUG
+
+修改监听地址，ip根据自己外网地址不同修改
+listen=udp:0.0.0.0:5060 advertise 15.108.193.219:5060
+
+把
+#loadmodule "db_mysql.so" 
+改为
+loadmodule "db_mysql.so"
+
+1.2.2 修改kamctlrc文件
+# The Kamailio configuration file for the control tools.
+# Here you can set variables used in the kamctl and kamdbctl setup
+# scripts. Per default all variables here are commented out, the control tools
+# will use their internal default values.
+## your SIP domain
+# SIP_DOMAIN=kamailio.org 我填的内网地址
+SIP_DOMAIN=172.17.250.116
+## chrooted directory
+# $CHROOT_DIR="/path/to/chrooted/directory"
+## database type: MYSQL, PGSQL, ORACLE, DB_BERKELEY, DBTEXT, or SQLITE
+# by default none is loaded
+#
+# If you want to setup a database with kamdbctl, you must at least specify
+# this parameter.
+DBENGINE=MYSQL
+## database host
+DBHOST=localhost
+## database port
+DBPORT=3306
+## database name (for ORACLE this is TNS name)
+DBNAME=kamailio
+# database path used by dbtext, db_berkeley or sqlite
+# DB_PATH="/usr/local/etc/kamailio/dbtext"
+## database read/write user
+DBRWUSER="kamailio"
+## password for database read/write user
+DBRWPW="kamailiorw"
+## database read only user
+DBROUSER="kamailioro"
+## password for database read only user
+DBROPW="kamailioro"
+## database access host (from where is kamctl used)
+#DBACCESSHOST=192.168.0.1
+## database super user (for ORACLE this is 'scheme-creator' user)
+DBROOTUSER="root"
+## password for database super user
+## - important: this is insecure, targeting the use only for automatic testing
+## - known to work for: mysql
+# DBROOTPW="dbrootpw"
+## database character set (used by MySQL when creating database)
+#CHARSET="latin1"
+# If to install uid modules related tables.
+# INSTALL_DBUID_TABLES=ask
+# Define what module tables should be installed.
+# If you use the postgres database and want to change the installed tables, then you
+# must also adjust the STANDARD_TABLES or EXTRA_TABLES variable accordingly in the
+# kamdbctl.base script.
+# Kamailio standard modules
+# STANDARD_MODULES="standard acc lcr domain group permissions registrar usrloc msilo
+# alias_db uri_db speeddial avpops auth_db pdt dialog dispatcher
+# dialplan"
+# Kamailio extra modules
+# EXTRA_MODULES="imc cpl siptrace domainpolicy carrierroute userblacklist htable purple sca"
+## type of aliases used: DB - database aliases; UL - usrloc aliases
+## - default: none
+# ALIASES_TYPE="DB"
+## control engine: RPCFIFO
+## - default RPCFIFO
+# CTLENGINE="RPCFIFO"
+## path to FIFO file for engine RPCFIFO
+# RPCFIFOPATH="/var/run/kamailio/kamailio_rpc_fifo"
+## check ACL names; default on (1); off (0)
+# VERIFY_ACL=1
+## ACL names - if VERIFY_ACL is set, only the ACL names from below list
+## are accepted
+# ACL_GROUPS="local ld int voicemail free-pstn"
+## check if user exists (used by some commands such as acl);
+## - default on (1); off (0)
+# VERIFY_USER=1
+## verbose - debug purposes - default '0'
+VERBOSE=1
+## do (1) or don't (0) store plaintext passwords
+## in the subscriber table - default '1'
+# STORE_PLAINTEXT_PW=0
+## Kamailio START Options
+## PID file path - default is: /var/run/kamailio/kamailio.pid
+PID_FILE=/var/run/kamailio/kamailio.pid
+## Extra start options - default is: not set
+# example: start Kamailio with 64MB share memory: STARTOPTIONS="-m 64"
+# STARTOPTIONS=
+1.创建数据库
+# /usr/local/sbin/kamdbctl create
+本人这一步报错
+在源码文件夹中将kamctl.mysql，kamdbctl.mysql，文件拷贝到/usr/local/lib64/kamailio/kamctl/文件夹中
+再将源码文件夹中mysql文件夹整个，拷贝到/usr/local/sbin/文件夹中
+ 
+2. 启动Kamailio服务
+# /usr/local/sbin/kamctl start
+ 
+如果启动失败
+kamailio -M 8 -E -e -dd  查看报错情况
+ 
+3. 监视Kamailio
+# /usr/local/sbin/kamctl moni
+4. 添加用户帐号
+# kamctl add 802 802
+如果两个终端在同一个局域网里，现在已经可以视频通话了
+下载xlite或者linphone，或者yate,这几个都试了除了这几个终端互相有点兼容性问题，基本上都能通，相同终端没问题
+
+配置linphone,ip根据自己的实际情况添
+
+https://blog.csdn.net/CHNIM/article/details/100121942
