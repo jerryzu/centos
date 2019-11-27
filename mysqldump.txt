@@ -64,9 +64,9 @@ where table_schema='tpedw'
       and table_name like 'rpt_fxq_tb%'
 order by table_name
 
-mysql --defaults-extra-file=my.cnf database < test_db.sql   
+mysql --defaults-extra-file=aml.cnf -D<database> < test_db.sql   
 
-/alidata/workspace/aml/conf/my.cnf
+/alidata/workspace/aml/conf/aml.cnf
 [client]
 port = 3306
 default-character-set = utf8mb4

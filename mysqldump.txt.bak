@@ -64,13 +64,12 @@ where table_schema='tpedw'
       and table_name like 'rpt_fxq_tb%'
 order by table_name
 
-/usr/local/mysql/bin/mysql --defaults-extra-file=/etc/my.cnf database < test_db.sql   
+mysql --defaults-extra-file=aml.cnf database < test_db.sql   
 
-/etc/my.cnf
+/alidata/workspace/aml/conf/aml.cnf
 [client]
 port = 3306
-socket = /tmp/mysql.sock
 default-character-set = utf8mb4
-host = localhost
-user =root
-password ='test'
+host = rm-bp19v63q682asdrja.mysql.rds.aliyuncs.com
+user =taipingbi_etl
+password =Tpstic123456
