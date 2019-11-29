@@ -138,9 +138,4 @@ max_heap_table_size = 16M
 tmp_table_size参数配置内部内存临时表的大小。
 用户创建的MEMORY表用max_heap_table_size参数配置。
 
-vi /etc/my.cnf
-[mysqld]
-max_heap_table_size = 2048M
-tmp_table_size = 2048M
-
 https://blog.csdn.net/sz85850597/article/details/91907988
