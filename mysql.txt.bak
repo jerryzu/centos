@@ -138,4 +138,241 @@ max_heap_table_size = 16M
 tmp_table_size参数配置内部内存临时表的大小。
 用户创建的MEMORY表用max_heap_table_size参数配置。
 
+vi /etc/my.cnf
+[mysqld]
+max_heap_table_size = 2048M
+tmp_table_size = 2048M
+
 https://blog.csdn.net/sz85850597/article/details/91907988
+
+show variables like '%table_open_cache%';
+show global status like 'Open%tables';
+
+Opened_tables,增加就是刷缓存
+
+发现open_tables等于table_open_cache，都是512，说明mysql正在将缓存的表释放以容纳新的表，此时可能需要加大table_open_cache的值，4G内存的机器，建议设置为2048
+比较适合的值：
+Open_tables / Opened_tables >= 0.85
+Open_tables / table_open_cache <= 0.95
+
+如果对此参数的把握不是很准，有个很保守的设置建议：把MySQL数据库放在生产环境中试运行一段时间，然后把参数的值调整得比Opened_tables的数值大一些，并且保证在比较高负载的极端条件下依然比Opened_tables略大。
+
+清空缓存
+执行
+
+mysql >flush tables;
+
+命令将会清空当前所有缓存的表。
+
+修改my.ini文件
+performance_schema_max_table_instances=600
+table_definition_cache=400
+table_open_cache=256
+
+一、慢查询
+mysql> show variables like ‘%slow%’;
+mysql> show global status like ‘%slow%’;
+mysql> show variables like ‘max_connections’;
+mysql> show global status like ‘Max_used_connections’;
+
+比较理想的设置是：
+Max_used_connections / max_connections   * 100% ≈ 85%
+
+mysql> show variables like ‘key_buffer_size’;
+mysql> show global status like ‘key_read%’;
+
+计算索引未命中缓存的概率：
+
+key_cache_miss_rate ＝ Key_reads / Key_read_requests * 100%
+
+比 如上面的数据，key_cache_miss_rate为0.0244%，4000个索引读取请求才有一个直接读硬盘，已经很BT 了，key_cache_miss_rate在0.1%以下都很好（每1000个请求有一个直接读硬盘），如果key_cache_miss_rate在 0.01%以下的话，key_buffer_size分配的过多，可以适当减少。
+MySQL服务器还提供了key_blocks_*参数：
+
+mysql> show global status like ‘key_blocks_u%’;
+
+Key_blocks_unused 表示未使用的缓存簇(blocks)数，Key_blocks_used表示曾经用到的最大的blocks数，比如这台服务器，所有的缓存都用到了，要么 增加key_buffer_size，要么就是过渡索引了，把缓存占满了。比较理想的设置：
+
+Key_blocks_used / (Key_blocks_unused + Key_blocks_used) * 100% ≈ 80%
+
+四、临时表
+
+mysql> show global status like ‘created_tmp%’;
+
+，比较理想的配置是：
+
+Created_tmp_disk_tables / Created_tmp_tables * 100% <= 25%
+
+ show variables where Variable_name in (‘tmp_table_size’, ‘max_heap_table_size’);
+
+ 五、Open Table情况
+
+mysql> show global status like ‘open%tables%’;
+Open_tables 表示打开表的数量，Opened_tables表示打开过的表数量，如果Opened_tables数量过大，说明配置中 table_cache(5.1.3之后这个值叫做table_open_cache)值可能太小，我们查询一下服务器table_cache值：
+
+mysql> show variables like ‘table_cache’;
+
+比较合适的值为：
+
+Open_tables / Opened_tables   * 100% >= 85%
+
+Open_tables / table_cache * 100% <= 95%
+
+六、进程使用情况
+mysql> show global status like ‘Thread%’;
+
+如 果我们在MySQL服务器配置文件中设置了thread_cache_size，当客户端断开之后，服务器处理此客户的线程将会缓存起来以响应下一个客户 而不是销毁（前提是缓存数未达上限）。Threads_created表示创建过的线程数，如果发现Threads_created值过大的话，表明 MySQL服务器一直在创建线程，这也是比较耗资源，可以适当增加配置文件中thread_cache_size值，查询服务器 thread_cache_size配置：
+mysql> show variables like ‘thread_cache_size’;
+
+七、查询缓存(query cache)
+mysql> show global status like ‘qcache%’;
+
+MySQL查询缓存变量解释：
+Qcache_free_blocks：缓存中相邻内存块的个数。数目大说明可能有碎片。FLUSH QUERY CACHE会对缓存中的碎片进行整理，从而得到一个空闲块。
+
+Qcache_free_memory：缓存中的空闲内存。
+
+Qcache_hits：每次查询在缓存中命中时就增大
+
+Qcache_inserts：每次插入一个查询时就增大。命中次数除以插入次数就是不中比率。
+
+Qcache_lowmem_prunes： 缓存出现内存不足并且必须要进行清理以便为更多查询提供空间的次数。这个数字最好长时间来看；如果这个数字在不断增长，就表示可能碎片非常严重，或者内存 很少。（上面的 free_blocks和free_memory可以告诉您属于哪种情况）
+
+Qcache_not_cached：不适合进行缓存的查询的数量，通常是由于这些查询不是 SELECT 语句或者用了now()之类的函数。
+
+Qcache_queries_in_cache：当前缓存的查询（和响应）的数量。
+
+Qcache_total_blocks：缓存中块的数量。
+
+我们再查询一下服务器关于query_cache的配置：
+mysql> show variables like ‘query_cache%’;
+
+各字段的解释：
+query_cache_limit：超过此大小的查询将不缓存
+
+query_cache_min_res_unit：缓存块的最小大小
+
+query_cache_size：查询缓存大小
+
+query_cache_type：缓存类型，决定缓存什么样的查询，示例中表示不缓存 select sql_no_cache 查询
+
+query_cache_wlock_invalidate：当有其他客户端正在对MyISAM表进行写操作时，如果查询在query cache中，是否返回cache结果还是等写操作完成再读表获取结果。
+
+query_cache_min_res_unit的配置是一柄”双刃剑”，默认是4KB，设置值大对大数据查询有好处，但如果你的查询都是小数据查询，就容易造成内存碎片和浪费。
+查询缓存碎片率 = Qcache_free_blocks / Qcache_total_blocks * 100%
+
+如果查询缓存碎片率超过20%，可以用FLUSH QUERY CACHE整理缓存碎片，或者试试减小query_cache_min_res_unit，如果你的查询都是小数据量的话。
+查询缓存利用率 = (query_cache_size - Qcache_free_memory) / query_cache_size * 100%
+
+查询缓存利用率在25%以下的话说明query_cache_size设置的过大，可适当减小；查询缓存利用率在80％以上而且Qcache_lowmem_prunes > 50的话说明query_cache_size可能有点小，要不就是碎片太多。
+查询缓存命中率 = (Qcache_hits - Qcache_inserts) / Qcache_hits * 100%
+
+示例服务器 查询缓存碎片率 ＝ 20.46％，查询缓存利用率 ＝ 62.26％，查询缓存命中率 ＝ 1.94％，命中率很差，可能写操作比较频繁吧，而且可能有些碎片。
+八、排序使用情况
+
+mysql> show global status like ‘sort%’;
+
+Sort_merge_passes 包括两步。MySQL 首先会尝试在内存中做排序，使用的内存大小由系统变量Sort_buffer_size 决定，如果它的大小不够把所有的记录都读到内存中，MySQL 就会把每次在内存中排序的结果存到临时文件中，等MySQL 找到所有记录之后，再把临时文件中的记录做一次排序。这再次排序就会增加 Sort_merge_passes。实际上，MySQL会用另一个临时文件来存再次排序的结果，所以通常会看到 Sort_merge_passes增加的数值是建临时文件数的两倍。因为用到了临时文件，所以速度可能会比较慢，增加
+Sort_buffer_size 会减少Sort_merge_passes 和 创建临时文件的次数。但盲目的增加 Sort_buffer_size 并不一定能提高速度
+
+九、文件打开数(open_files)
+mysql> show global status like ‘open_files’;
+
+mysql> show variables like ‘open_files_limit’;
+比较合适的设置：Open_files / open_files_limit * 100% <= 75％
+十、表锁情况
+mysql> show global status like ‘table_locks%’;
+
+Table_locks_immediate 表示立即释放表锁数，Table_locks_waited表示需要等待的表锁数，如果Table_locks_immediate / Table_locks_waited >5000，最好采用InnoDB引擎，因为InnoDB是行锁而MyISAM是表锁，对于高并发写入的应用InnoDB效果会好些
+
+十一、表扫描情况
+mysql> show global status like ‘handler_read%’;
+mysql> show global status like ‘com_select’;
+计算表扫描率：
+表扫描率 ＝ Handler_read_rnd_next / Com_select
+
+如果表扫描率超过4000，说明进行了太多表扫描，很有可能索引没有建好，增加read_buffer_size值会有一些好处，但最好不要超过8MB。
+
+*.线程独享内存
+*.全局共享内存
+全局共享内存类似ORACLE的系统全局区SGA，线程独享内存类似ORACLE的进程全局区PGA
+
+一、线程独享内存
+
+在MySQL中，线程独享内存主要用于各客户端连接线程存储各种操作的独享数据，如线程栈信息，分组排序操作，数据读写缓冲，结果集暂存等等，而且大多数可以通过相关参数来控制内存的使用量。
+
+* 线程栈信息使用内存(thread_stack)：
+主要用来存放每一个线程自身的标识信息，如线程id，线程运行时基本信息等等，我们可以通过 thread_stack 参数来设置为每一个线程栈分配多大的内存。
+Global,No Dynamic,Default 192K(32bit), 256K(32bit),
+推荐配置：默认
+
+* 排序使用内存(sort_buffer_size)：
+MySQL 用此内存区域进行排序操作(filesort)，完成客户端的排序请求。当我们设置的排序区缓存大小无法满足排序实际所需内存的时候，MySQL会将数据写入磁盘文件来完成排序。由于磁盘和内存的读写性能完全不在一个数量级，
+所以sort_buffer_size参数对排序操作的性能影响绝对不可小视。排序操作的实现原理请参考：MySQL Order By的实现分析。
+什么时候会用到？
+对结果集排序时
+使用确认：
+可以通过查询计划中的Extra列的值为Using file-sort来证实使用了和这个缓冲区。
+>explain select * from user1;
+Global Session,Dynamic,Default 2M(32bit), 2M(32bit),
+推荐配置：8M（内存足够的情况下），默认（内存紧张的情况）
+优化建议：一种说法是增大可以提高order by,group by性能，防止数据写入磁盘占用IO资源，还有一种说法是不推荐增加这个缓冲区的大小，理由是当值太大时可能会降低查询的执行速度。目前我没有实验证实。
+
+* Join操作使用内存(join_buffer_size)：
+应用程序经常会出现一些两表（或多表）Join的操作需求，MySQL在完成某些Join需求的时候（all/index join），为了减少参与Join的“被驱动表”的读取次数以提高性能，需要使用到Join Buffer来协助完成Join操作
+（具体Join实现算法请参考：MySQL中的 Join 基本实现原理）。当Join Buffer太小，MySQL 不会将该Buffer存入磁盘文件，而是先将Join Buffer中的结果集与需要Join的表进行Join操作，然后清空Join Buffer中的数据，
+继续将剩余的结果集写入此Buffer中，如此往复。这势必会造成被驱动表需要被多次读取，成倍增加IO访问，降低效率。
+什么时候会用到？
+当查询必须连接两个表（或多个）的数据集并且不能使用索引时，这个缓冲区会被用到。这个缓冲区专门为每个线程的无索引链接操作准备的。
+使用确认：
+可以通过查询计划中的Extra列的值为Using join bufer来证实使用了和这个缓冲区。
+>explain select * from user1;
+
+Global Session,Dynamic,Default 128K 各版本平台最大值不一样
+推荐配置：8M（内存足够的情况下），默认（内存紧张的情况）
+优化建议：有一种说法是增加这个缓冲区的大小不会加快全连接操作的速度。目前我没有实验证实。
+
+* 顺序读取数据缓冲区使用内存(read_buffer_size)：
+这部分内存主要用于当需要顺序读取数据的时候，如无法使用索引的情况下的全表扫描，全索引扫描等。在这种时候，MySQL按照数据的存储顺序依次读取数据块，每次读取的数据快首先会暂存在read_buffer_size中，
+当buffer空间被写满或者全部数据读取结束后，再将buffer中的数据返回给上层调用者，以提高效率。
+Global Session,Dynamic,Default 128K
+推荐配置：4M/8M
+
+
+* 随机读取数据缓冲区使用内存(read_rnd_buffer_size)：
+和顺序读取相反，当MySQL进行非顺序读取（随机读取）数据块的时候，会利用这个缓冲区暂存读取的数据。如根据索引信息读取表数据，根据排序后的结果集与表进行Join等等。
+总的来说，就是当数据块的读取需要满足一定的顺序的情况下，MySQL就需要产生随机读取，进而使用到read_rnd_buffer_size 参数所设置的内存缓冲区。
+Global Session,Dynamic,Default 256K
+推荐配置：8M
+
+* 连接信息及返回客户端前结果集暂存使用内存(net_buffer_lenth)：
+这部分用来存放客户端连接线程的连接信息和返回客户端的结果集。当MySQL开始产生可以返回的结果集，会在通过网络返回给客户端请求线程之前，会先暂存在通过net_buffer_lenth所设置的缓冲区中，
+等满足一定大小的时候才开始向客户端发送，以提高网络传输效率。不过net_buffer_lenth参数所设置的仅仅只是该缓存区的初始化大小，MySQL会根据实际需要自行申请更多的内存以满足需求，
+但最大不会超过 max_allowed_packet 参数大小。
+Global Session,Dynamic,Default 16K
+推荐配置：默认 16K
+
+* 批量插入暂存使用内存(bulk_insert_buffer_size)：
+当我们使用如 insert … values(…),(…),(…)… 的方式进行批量插入的时候，MySQL会先将提交的数据放如一个缓存空间中，当该缓存空间被写满或者提交完所有数据之后，MySQL才会一次性将该缓存空间中的数据写入数据库并清空缓存。
+此外，当我们进行 LOAD DATA INFILE操作来将文本文件中的数据Load进数据库的时候，同样会使用到此缓冲区。
+Global Session,Dynamic,Default 8M
+推荐配置：默认 8M
+* 临时表使用内存(tmp_table_size)：
+当我们进行一些特殊操作如需要使用临时表才能完成的Order By,Group By 等等，MySQL可能需要使用到临时表。当我们的临时表较小（小于tmp_table_size 参数所设置的大小）的时候，MySQL会将临时表创建成内存临时表，
+只有当tmp_table_size所设置的大小无法装下整个临时表的时候，MySQL才会将该表创建成MyISAM存储引擎的表存放在磁盘上。不过，当另一个系统参数 max_heap_table_size 的大小还小于 tmp_table_size 的时候，
+MySQL将使用 max_heap_table_size 参数所设置大小作为最大的内存临时表大小，而忽略tmp_table_size 所设置的值。而且 tmp_table_size 参数从 MySQL 5.1.2 才开始有，之前一直使用 max_heap_table_size。
+谁小谁生效.另外还有一个参数max_tmp_tables,没有使用
+tmp_table_size
+Global Session,Dynamic,Default 16M
+推荐配置：64M
+max_heap_table_size
+Global Session,Dynamic,Default 8M
+This variable sets the maximum size to which user-created MEMORY tables are permitted to grow
+这个变量定义了MEMORY存储引擎表的最大容量。
+This variable is also used in conjunction with tmp_table_size to limit the size of internal in-memory tables. See
+这个变量也与tmp_table_size一起使用限制内部内存表的大小。请见
+http://dev.mysql.com/doc/refman/5.5/en/internal-temporary-tables.html
+推荐配置：64M
+主要根据业务以及服务器内存来调整，如果有需要到则可以调整到。GB居然使用2G的配置，汗
+
+目前没有一个简便的方式来确定内部临时表的总容量。可以通过MySQL状态变量created_tmp_tables和created_tmp_disk_tables来确定创建了临时表和基于磁盘的临时表
+

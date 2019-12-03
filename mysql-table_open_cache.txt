@@ -1,0 +1,29 @@
+table_cache 参数设置表高速缓存的数目。每个连接进来，都会至少打开一个表缓存。因此， table_cache 的大小应与 max_connections 的设置有关。例如，对于 200 个并行运行的连接，应该让表的缓存至少有 200 × N ，这里 N 是应用可以执行的查询的一个联接中表的最大数量。此外，还需要为临时表和文件保留一些额外的文件描述符。
+
+ 
+
+缓存机制
+当 Mysql 访问一个表时，如果该表在缓存中已经被打开，则可以直接访问缓存；如果还没有被缓存，但是在 Mysql 表缓冲区中还有空间，那么这个表就被打开并放入表缓冲区；如果表缓存满了，则会按照一定的规则将当前未用的表释放，或者临时扩大表缓存来存放，使用表缓存的好处是可以更快速地访问表中的内容。
+
+参数调优
+一般来说，可以通过查看数据库运行峰值时间的状态值 Open_tables 和 Opened_tables ，判断是否需要增加 table_cache 的值（其中 open_tables 是当前打开的表的数量， Opened_tables 则是已经打开的表的数量）。即如果open_tables接近table_cache的时候，并且Opened_tables这个值在逐步增加，那就要考虑增加这个值的大小了。还有就是Table_locks_waited比较高的时候，也需要增加table_cache。
+
+mysql> show global status like 'open%_tables';
+
+如果Open_tables的值已经接近table_cache的值，且Opened_tables还在不断变大，则说明mysql正在将缓存的表释放以容纳新的表，此时可能需要加大table_cache的值。对于大多数情况，
+
+比较适合的值：
+
+Open_tables / Opened_tables >= 0.85
+Open_tables / table_cache <= 0.95
+
+如果对此参数的把握不是很准，VPS管理百科给出一个很保守的设置建议：把MySQL数据库放在生产环境中试运行一段时间，然后把参数的值调整得比Opened_tables的数值大一些，并且保证在比较高负载的极端条件下依然比Opened_tables略大。
+
+在mysql默认安装情况下，table_cache的值在2G内存以下的机器中的值默认时256到 512，如果机器有4G内存,则默认这个值是2048，但这决意味着机器内存越大，这个值应该越大，因为table_cache加大后，使得mysql对 SQL响应的速度更快了，不可避免的会产生更多的死锁（dead lock），这样反而使得数据库整个一套操作慢了下来，严重影响性能。所以平时维护中还是要根据库的实际情况去作出判断，找到最适合你维护的库的 table_cache值。
+
+清空缓存
+执行
+
+mysql >flush tables;
+
+命令将会清空当前所有缓存的表。
