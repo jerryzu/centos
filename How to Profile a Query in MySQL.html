@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>How to Profile a Query in MySQL</title>
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.xaprb.com/index.xml">
+		<link rel="canonical" href="https://www.xaprb.com/blog/2006/10/12/how-to-profile-a-query-in-mysql/">
+		
+		<link rel="shortcut icon" type="image/png" href="https://www.xaprb.com/apple-touch-icon-precomposed.png">
+		
+		
+		<meta name="generator" content="Hugo 0.47.1" />
+
+		
+		<meta property="og:title" content="How to Profile a Query in MySQL" />
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://www.xaprb.com/img/default-header-img.jpg" />
+		<meta property="og:description" content="" />
+		<meta property="og:url" content="https://www.xaprb.com/blog/2006/10/12/how-to-profile-a-query-in-mysql/" />
+		<meta property="og:site_name" content="How to Profile a Query in MySQL" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:site" content="@xaprb" />
+
+
+		
+		<link rel="stylesheet" href="https://www.xaprb.com/css/tachyons.min.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/story.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/descartes.css" />
+		
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+		<link href="https://fonts.googleapis.com/css?family=Quattrocento+Sans:400,400i,700,700i|Quattrocento:400,700|Spectral:400,400i,700,700i&amp;subset=latin-ext" rel="stylesheet">
+		
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.css" integrity="sha384-TEMocfGvRuD1rIAacqrknm5BQZ7W7uWitoih+jMNFXQIbNl16bO8OZmylH/Vi/Ei" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.js" integrity="sha384-jmxIlussZWB7qCuB+PgKG1uLjjxbVVIayPJwi6cG6Zb4YKq0JIw+OMnkkEC7kYCq" crossorigin="anonymous"></script>
+		<script src="https://www.xaprb.com/js/auto-render.min.js"></script> 
+		<script src="https://www.xaprb.com/js/story.js"></script>
+
+	</head>
+	<body class="ma0 bg-white section-blog page-kind-page is-page-true  feature-math feature-figcaption feature-tablecaption feature-figcaption-hidden feature-3dbook-covers feature-hyphenate feature-justify feature-highlight feature-hrfleuron feature-qrcode feature-tweetquote feature-depth">
+		
+		<header class="cover bg-top" style="background-image: url('https://www.xaprb.com/img/default-header-img.jpg'); background-position: center;">
+			<div class="bg-black-30 bb bt">
+
+				<nav class="hide-print sans-serif  border-box pa3 ph5-l">
+					<a href="https://www.xaprb.com/" title="Home">
+						<img src="https://www.xaprb.com/img/logo.jpg" class="w2 h2 br-100" alt="Baron Schwartz&#39;s Website" />
+					</a>
+					<div class="fr h2 pv2 tr">
+						<a class="link f5 ml2 dim near-white" href="/archives/">Archives</a>
+						<a class="link f5 ml2 dim near-white" href="/talks/">Talks</a>
+						<a class="link f5 ml2 dim near-white" href="https://github.com/xaprb"><i class="fab fa-github-square"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://linkedin.com/in/xaprb"><i class="fab fa-linkedin"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://twitter.com/xaprb"><i class="fab fa-twitter-square"></i></a>
+						<a class="link f5 ml2 dim near-white fas fa-rss-square" href="https://www.xaprb.com/index.xml" title="RSS Feed"></a>
+						<a class="link f5 ml2 dim near-white fas fa-search" href="https://www.xaprb.com/search/" role="search" title="Search"></a>
+					</div>
+				</nav>
+
+				<div id="hdr" class="tc-l pv4-ns pv5-l pv2 ph3 ph4-ns">
+					<h1 class="near-white mt1-ns f2 fw3 mb0 mt0 lh-title">How to Profile a Query in MySQL</h1>
+					<h2 class="near-white mt3-l mb4-l fw1 f6 f3-l measure-wide-l center lh-copy mt2 mb3">
+						
+						
+							
+								Published
+								<time datetime="2006-10-12T00:00:00Z">Oct 12, 2006</time>
+								<span class="display-print">by Baron Schwartz</span>
+								 in <a href="https://www.xaprb.com/categories/databases" class="no-underline category near-white dim">Databases</a>
+								<span class="display-print">at https://www.xaprb.com/blog/2006/10/12/how-to-profile-a-query-in-mysql/</span>
+							
+						
+					</h2>
+				</div>
+
+				
+				
+				
+				
+
+			</div>
+		</header>
+		
+		<main role="main">
+		
+<article class="center bg-white br-3 pv1 ph4 lh-copy f5 nested-links mw7">
+	
+
+<p>When people discuss query optimization on MySQL, or say a query doesn&rsquo;t perform well, they usually mention execution time. Execution time is important, but it&rsquo;s not the only metric to use (or even the best). There are many other ways to measure the work a query requires. This article explains how to really profile a query&mdash;what to measure, how to do it as accurately as possible, and what it means.</p>
+
+<blockquote>
+<p>Note: I wrote this article in 2006, when I didn&rsquo;t have a clear understanding
+of even simple concepts such as <em>what performance really is</em>. Since then I
+have learned a lot from wise people such as Cary Millsap. In 2012 I founded
+<a href="https://vividcortex.com/">VividCortex, the best database performance optimization and database monitoring platform</a>
+to chase away the kind of ignorance I display in the article below. Enjoy this
+trip down memory lane.</p>
+</blockquote>
+
+<p>This is the first article in a series. In upcoming articles I&rsquo;ll demonstrate some hands-on profiling with concrete examples, and give you a tool to automate the job.</p>
+
+<h3 id="why-profile-queries">Why profile queries?</h3>
+
+<p>Why should you profile your queries? After all, if it only takes a hundredth of a second, isn&rsquo;t that good enough? Even if you could make it twice as fast, do you care about such a small amount of time?</p>
+
+<p>Absolutely, unless you only run that query once in a while. Your queries will probably follow the <sup>90</sup>&frasl;<sub>10</sub> rule. 90% of your work will be caused by 10% of the queries. You need to optimize whatever causes most of the work, and in my experience, it&rsquo;s often sub-millisecond queries being run thousands or millions of times. Optimize queries that are expensive because they run all the time, <em>and</em> those that are expensive because they cause a lot of work. You can&rsquo;t just do one and really reduce the overall load on your server.</p>
+
+<p>Here&rsquo;s an example from my work: We currently have many <a href="/blog/2006/05/02/how-to-write-efficient-archiving-and-purging-jobs-in-sql/">archiving and purging jobs</a> running nightly, pruning tables with thousands or millions of tiny queries. I recently profiled one job&rsquo;s query and found it was using indexes badly. I rewrote the query, and instead of taking dozens of seconds per thousand rows, it now takes one or two, plus it causes a lot less disk activity. Each individual query, according to the <code>mysql</code> command-line client, takes 0.00 seconds before and after optimization&mdash;so if I didn&rsquo;t profile that query, I wouldn&rsquo;t have an effective way to optimize it, except watching it run for a while (which, by the way, does not count as profiling).</p>
+
+<p>You need to profile your queries so you know how they really perform.</p>
+
+<h3 id="tool-1-explain">Tool 1: <code>EXPLAIN</code></h3>
+
+<p>MySQL provides two main tools for understanding query performance: <a href="http://dev.mysql.com/doc/refman/5.0/en/explain.html"><code>EXPLAIN</code></a> and <a href="http://dev.mysql.com/doc/refman/5.0/en/show-status.html"><code>SHOW STATUS</code></a>. Most MySQL developers know about <code>EXPLAIN</code>, and with some experience and lots of reading in the MySQL manual, you can learn a truly surprising amount about a query with <code>EXPLAIN</code>.</p>
+
+<p>If you&rsquo;re new to MySQL but have experience with another system such as Microsoft SQL Server, you may think <code>EXPLAIN</code> doesn&rsquo;t tell you much, but reserve your judgement for a while. As you learn more about MySQL, you may change your mind. I did, though it took me a long time. There&rsquo;s a lot to know.</p>
+
+<p><code>EXPLAIN</code> shows the <em>estimated execution plan</em> of a <code>SELECT</code> query. It explains how indexes will be used, in what order a join is performed, estimated number of rows accessed, and so forth. Together with execution time, this is a good first approximation to a query&rsquo;s performance. There are some limitations, though.</p>
+
+<p>The biggest problem is that you can only use it with <code>SELECT</code> queries. It is possible, if you really know what you&rsquo;re doing, to rewrite some non-<code>SELECT</code> queries so <code>EXPLAIN</code> can approximate what rows might be accessed. For example, you might rewrite an <code>UPDATE</code> as a <code>SELECT</code>, but you have to really understand how the query is going to use indexes, what columns it needs to access, and so forth (this is non-trivial, and depends on lots of factors, like the storage engine). Then you&rsquo;ll have a rough guess at how the server might <em>find</em> the rows it wants to update, but finding rows to update is not the same thing as updating them. Updates may cause all sorts of work&mdash;page splits, row re-ordering, index re-balancing, and so on. So, though <code>EXPLAIN</code> can give an idea of how a non-<code>SELECT</code> query might work, it&rsquo;s quite crude.</p>
+
+<p>The next limitation is that you&rsquo;re only getting an estimate. This is based on MySQL&rsquo;s index statistics and whatever else it can learn about the query and tables at query compile and optimization time. This can be very far from the reality it discovers at run time. Index statistics can be out of date, or based on unevenly distributed entries. And the query may find things out at run time and decide to take a different strategy. A good example of this is a join with a range check.</p>
+
+<h3 id="tool-2-show-status">Tool 2: <code>SHOW STATUS</code></h3>
+
+<p>The other tool at your disposal is <a href="http://dev.mysql.com/doc/refman/5.0/en/show-status.html"><code>SHOW STATUS</code></a>, which displays MySQL&rsquo;s internal counters. MySQL increments these as it executes each query. For instance, every time the query handler advances from one entry to the next in an index, it increments a counter. One thing you can use these counters for is to get a sense of what types of operations your server does in aggregate (see the excellent <a href="http://hackmysql.com/mysqlreport/">mysqlreport</a> tool for help with this). Another use is to figure out how much work an individual query did. If you run <code>SHOW STATUS</code>, execute a query, and run <code>SHOW STATUS</code> again you can see how much the counters have incremented, and thus how much work the query did.</p>
+
+<p><code>SHOW STATUS</code> is after-the-fact. It is not estimated, as <code>EXPLAIN</code> is. The numbers really reflect the work the server has done. For this reason, it can tell you much more about your query&rsquo;s performance than <code>EXPLAIN</code>. You can also see how non-<code>SELECT</code> queries perform. Knowing how to interpret these results is what separates power users from novices.</p>
+
+<p>Since it&rsquo;s the least discussed and understood, I&rsquo;ll devote the rest of this article to the fine art of measuring and interpreting <code>SHOW STATUS</code>.</p>
+
+<h3 id="what-to-measure">What to measure</h3>
+
+<p>The <a href="http://dev.mysql.com/doc/refman/5.0/en/server-status-variables.html">MySQL manual&rsquo;s section on server status variables</a> explains all the various status variables. Many of them are version-dependent, but the following important ones are related to the work a query really did. I&rsquo;ll explain them below:</p>
+
+<ul>
+<li><code>Bytes_received</code></li>
+<li><code>Bytes_sent</code></li>
+<li><code>Created_tmp_disk_tables</code></li>
+<li><code>Created_tmp_files</code></li>
+<li><code>Created_tmp_tables</code></li>
+<li><code>Handler_</code></li>
+<li><code>Innodb_</code></li>
+<li><code>Key_read_requests</code></li>
+<li><code>Key_reads</code></li>
+<li><code>Key_write_requests</code></li>
+<li><code>Key_writes</code></li>
+<li><code>Last_query_cost</code></li>
+<li><code>Select_</code></li>
+<li><code>Sort_</code></li>
+<li><code>Table_locks_immediate</code></li>
+<li><code>Table_locks_waited</code></li>
+</ul>
+
+<p>Some of these are pretty self-explanatory, and others are covered well in the manual, but here&rsquo;s a quick overview of the less-obvious ones. The <code>Handler_</code> variables track what the MySQL server does internally. For instance, every time MySQL reads the first row in an index, it increments <code>Handler_read_first</code>; this usually indicates it is doing something like beginning an index scan, or satisfying a <code>MIN()</code> query. You can get a good idea of what the query really did by watching these variables. In particular, you should try to get the <code>Handler_read</code> statistics as low as possible (some kinds of reads are more desirable than others, and you should prefer those).</p>
+
+<p>The InnoDB storage engine tracks a lot of counters for its own internals, which are sometimes redundant to the <code>Handler_</code> counters. There are too many, and InnoDB is too specialized, to cover adequately here.</p>
+
+<p>The <code>Key_read</code> and <code>Key_write</code> variables give additional information about key usage. The <code>Last_query_cost</code> variable reports how expensive MySQL&rsquo;s query optimizer considered the last query to be. It&rsquo;s only available in new versions of MySQL.</p>
+
+<p>The <code>Select_</code> counters get incremented every time a different type of <code>SELECT</code> operation happens. You can use these counters to determine if there is a table scan (<code>Select_scan</code>), a join that scanned a range of an index, and so forth. These are not per-row variables, in contrast to the <code>Handler_</code> variables&mdash;they record a single event. If you write a many-row table scan, you&rsquo;ll see <code>Handler_read_next</code> or <code>Handler_read_rnd_next</code> incremented a lot, but <code>Select_scan</code> will only get incremented by one, because it was only a single query.</p>
+
+<p>On the other hand, the <code>Sort_</code> variables are a mixed bag. <code>Sort_merge_passes</code> is related to the merge-sort algorithm, and may get incremented multiple times per query. <code>Sort_range</code> and <code>Sort_scan</code> increment once per query if the results were sorted by a range or a scan. <code>Sort_rows</code> is the number of sorted rows. Side note: here is an excellent article on <a href="http://www.hackmysql.com/selectandsort">how to understand the <code>Select_</code> and <code>Sort_</code> variables</a>.</p>
+
+<p>Finally, the <code>Table_locks</code> variables show how many table locks have been acquired, and how many were granted immediately without a wait.</p>
+
+<p>That&rsquo;s just a quick overview of the variables! There is certainly a lot to know about them. However, if you group them together logically, as I&rsquo;m about to do, you can use them to answer questions about your query&rsquo;s performance.</p>
+
+<h3 id="how-to-measure-accurately">How to measure accurately</h3>
+
+<p>Before I discuss how to measure and analyze these variables, I need to go over some complexities. It gets a little ugly, but you need to know this, or you won&rsquo;t get anything useful.</p>
+
+<p>The first thing to know is many of these variables are global. That means if there are other things working on the server at the same time as you run your server, you will have no means of distinguishing the work your query did from the work the other queries did. In new versions of MySQL, some of the variables have a default session scope. That means these variables are private to your connection, not affected by anything else on the server. That actually makes things <em>more</em> complicated, not less, because now you have to know which things are global and which aren&rsquo;t.</p>
+
+<p>Regardless of your version, by far the easiest way to get un-polluted numbers is to run your queries on a completely quiet server, with only one connection: yours. Unfortunately, this means you can&rsquo;t test your query under load, so you won&rsquo;t get to see any effects of concurrency (waiting for table locks, for example). With new versions of MySQL you can &ldquo;sort of&rdquo; do this with session variables, but again not all variables have session scope. What you really ought to do is run your query on a quiet server, and then run it on a busy server and see what the differences are.</p>
+
+<p>Even running <code>SHOW STATUS</code> causes the server to do some work, so if you really want to know how much work your query did, you have to figure out how much work <code>SHOW STATUS</code> causes, and subtract that from the work your query did.</p>
+
+<p>You should also <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">turn off the query cache</a> if you have it enabled, so you don&rsquo;t get any cache hits or inserts. You can do this either by setting your session query cache type (<code>SET SESSION query_cache_type = OFF;</code>), or using <code>SQL_NO_CACHE</code> in any <code>SELECT</code> queries. Finally, if you intend to get an accurate view of how much I/O your query really needs, you should either make sure your server is &ldquo;warmed up&rdquo; by running the query to fetch everything into memory, or make sure you are &ldquo;starting cold&rdquo; by flushing everything to disk with <a href="http://dev.mysql.com/doc/refman/5.0/en/flush.html"><code>FLUSH TABLES</code></a>.</p>
+
+<h3 id="the-technique">The technique</h3>
+
+<p>It&rsquo;s time to bring everything I&rsquo;ve discussed together. When I profile a query, I do the following:</p>
+
+<ol>
+<li>Run the query a few times to &ldquo;warm up&rdquo; the server.</li>
+<li>Run <code>SHOW STATUS</code> and save the result.</li>
+<li>Run the query.</li>
+<li>Run <code>SHOW STATUS</code> again and get the differences from the first time I ran it.</li>
+<li>Optionally, if I&rsquo;m on a quiet server, I subtract the work <code>SHOW STATUS</code> itself causes (don&rsquo;t do this on a busy server; you&rsquo;ll just add insult to injury). I run <code>SHOW STATUS</code> twice and subtract each variable to get a baseline, then subtract this amount from the results I got above.</li>
+</ol>
+
+<p>At this point, the numbers are the best I know how to get. Let&rsquo;s look at how to analyze them.</p>
+
+<h3 id="how-to-analyze-the-results">How to analyze the results</h3>
+
+<p>As I&rsquo;ve shown you, there are a lot of different numbers to consider. I would break the results down into logical sections as follows:</p>
+
+<ol>
+<li>Overall</li>
+<li>Table, index, and sorting</li>
+<li>Row-level operations</li>
+<li>I/O operations</li>
+<li>InnoDB operations, if applicable</li>
+</ol>
+
+<p>First, two important overall measurements are the query&rsquo;s time and if available, <code>Last_query_cost</code>. These two numbers can give you a high-level view of a query performance.</p>
+
+<p>Next, look at how the query affected tables, indexes, files and sorting. To start with, look at the <code>Select_</code> variables to see how many table and index scans you had, and how many range scans and joins with or without checks. The <code>Sort_</code> variables tell you more about sorting. You&rsquo;re striving for as few table and index scans as possible, and it&rsquo;s best to sort as few rows as possible. By the way, you should also examine <code>EXPLAIN</code> to see what kind of sorting is used (for example, index sorts may be better than filesorts).</p>
+
+<p>Row operation statistics come from the <code>Handler_</code> variables. You can see not only reads, but writes as well. Sometimes you&rsquo;ll see a lot of <code>Handler_write</code> events even in a plain <code>SELECT</code> query. This happens while the handler generates the result set&mdash;it doesn&rsquo;t necessarily mean rows in your base tables got updated. <code>GROUP BY</code> queries that have to accumulate a result set are a typical scenario. Temporary tables are another, and sometimes results are materialized as intermediate temporary tables. Subqueries in the <code>FROM</code> clause are an example.</p>
+
+<p>The fewer writes, the better&mdash;unless those writes enable many fewer reads. For example, materializing an intermediate temporary table and writing to it can save a lot of reads in grouped queries. If you rewrite a correlated, grouped subquery as a grouped subquery in the <code>FROM</code> clause, you only have to do the <code>GROUP BY</code> against the base table once, as opposed to the correlated subquery, which will probe into the base table once for every row in the outer table. In that case, the writes to the temporary table are a good trade-off. But don&rsquo;t take my word for it, profile some queries and see!</p>
+
+<p>I/O operations include the <code>Key_</code> and <code>Created_</code> variables, which tell you how much index, temp table, and temp file I/O happened. This is where you&rsquo;ll see the temporary tables I just mentioned. Temp files may be the result of filesort operations. <code>Key_read_requests</code> and <code>Key_write_requests</code> tell you how many times the server asked to read or write a key block from or to the key cache. <code>Key_reads</code> and <code>Key_writes</code> tell you how often the operation had to go to disk (i.e. fetching more data from and index, or flushing an index write to disk). If you are using indexes well, it is normal to see high request values here. If your server is configured well, it is normal for virtually 100% of key read requests to be satisfied from the cache, and not have to go to disk. Even if the server isn&rsquo;t configured well, each key read request should bring a block of the index into memory, which can be used to satisfy some subsequent number of read requests, so if you are seeing much less than 100% key cache hit, something is very wrong.</p>
+
+<p>The InnoDB operations are much more complicated than I want to cover in this article, but some of them are pretty easy to understand. For example, <code>Innodb_rows_deleted</code> is basically the InnoDB equivalent of <code>Handler_delete</code>. You only care about these variables if you&rsquo;re using InnoDB, and if you&rsquo;re optimizing queries for InnoDB, you should prepare to study the manual, for with great power comes great responsibility&mdash;InnoDB is pretty complex, and it will take some work to understand how it executes queries. There are 43 <code>Innodb_</code> variables alone in MySQL 5.0.21.</p>
+
+<h3 id="what-a-pain">What a pain!</h3>
+
+<p>That&rsquo;s a lot of manual work, isn&rsquo;t it? Why hasn&rsquo;t anyone written a tool to do this automatically? Well, if you&rsquo;ve been reading my blog for a while, you already know what I&rsquo;m about to say: I <em>have</em> written such a tool. I&rsquo;m putting the finishing touches on it, but I think you&rsquo;ll like how it does all this work for you, and formats the results in a way you can use instantly. I&rsquo;ll release it in a few days.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>That&rsquo;s a basic overview, but it&rsquo;s all I can offer in this article. You could easily write a small book on the subject. If you&rsquo;re new to profiling queries, I would suggest you just spend some time doing it. Take queries that you&rsquo;ve optimized for speed in the past, and re-evaluate them by measuring the status variables, so you can see what kinds of improvements really caused the speed increases. You need to become familiar with typical numbers, which metrics matter for your queries, and so forth. I can&rsquo;t be much more specific without writing that book, because your server, your application, your data, and your queries are so unique.</p>
+
+<p>Regardless of how much homework you have left to do, I hope this article has given you some insight into the level of detailed statistics available to you. Don&rsquo;t limit yourself to <code>EXPLAIN</code> and centi-second-granularity execution times in the <code>mysql</code> command-line client. That&rsquo;s only the tip of the iceberg.</p>
+
+<p>I&rsquo;m interested in learning what you know about query optimization and profiling, as I am myself only a self-taught beginner! And if you&rsquo;d like to stay current with my upcoming articles, especially the upcoming release of the MySQL query profiler I promised, please <a href="/index.xml">subscribe via e-mail or feeds</a>.</p>
+
+<p><strong>Update</strong> Peter has a very good article, which demonstrates some real profiling measurements, on <a href="http://www.mysqlperformanceblog.com/2006/08/14/mysql-followup-on-union-for-query-optimization-query-profiling/">optimizing loose index scans with <code>UNION</code></a>. Well worth a read.</p>
+
+</article>
+
+		</main>
+		
+				<div class="hide-print sans-serif f6 f5-l mt5 ph3 pb6 center nested-copy-line-height lh-copy nested-links mw-100 measure-wide">
+		<div class="about-the-author">
+		
+			
+			
+				
+					<p><a href="/about/"><img src="https://d33wubrfki0l68.cloudfront.net/843019e4d498ed7c38871b8f93da3ccfc0f91632/7e911/baron-square.jpg" alt="Baron Schwartz" /></a></p>
+
+<p>I&rsquo;m the founder and CTO of <a href="https://vividcortex.com">VividCortex</a>, author of
+several books, and creator of various open-source software. I write about topics such as technology, entrepreneurship, and fitness, and I tweet at <a href="https://twitter.com/xaprb">@xaprb</a>. <a href="/about/">More about me</a>.</p>
+
+				
+			
+		
+		</div>
+		
+		<div class="subscribe-form cb w-100 pt3">
+			<form action="//xaprb.us19.list-manage.com/subscribe?u=6ee277790a99c26a414c9693f&amp;id=703c46c578" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" target="_blank" novalidate>
+				<input class="w-50 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l mr2" type="email" placeholder="Subscribe for email updates!" name="EMAIL" id="mce-EMAIL">
+				<input class="w-40 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l white bg-mid-gray" type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe">
+			</form>
+		</div>
+		
+	</div>
+
+		
+		
+		
+		<footer class="hide-print sans-serif f6 fw1 bg-black near-white bottom-0 w-100 pa3" role="contentinfo">
+			<p class="w-50 fr tr">
+			<a class="no-underline near-white" href="https://github.com/xaprb/story"><img class="dib" title="Made with Hugo and Story" alt="Story logo" src="https://www.xaprb.com/img/story-logo-white.svg" style="width: 1.5rem; height: 1.5rem" /></a>
+			</p>
+			<p class="w-50 near-white">
+				&copy; 2019 Baron Schwartz
+			</p>
+		</footer>
+		
+	
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-101883-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+	
+	</body>
+</html>

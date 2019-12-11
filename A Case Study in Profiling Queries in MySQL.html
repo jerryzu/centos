@@ -1,0 +1,439 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>A Case Study in Profiling Queries in MySQL</title>
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.xaprb.com/index.xml">
+		<link rel="canonical" href="https://www.xaprb.com/blog/2006/10/15/a-case-study-in-profiling-queries-in-mysql/">
+		
+		<link rel="shortcut icon" type="image/png" href="https://www.xaprb.com/apple-touch-icon-precomposed.png">
+		
+		
+		<meta name="generator" content="Hugo 0.47.1" />
+
+		
+		<meta property="og:title" content="A Case Study in Profiling Queries in MySQL" />
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://www.xaprb.com/img/default-header-img.jpg" />
+		<meta property="og:description" content="" />
+		<meta property="og:url" content="https://www.xaprb.com/blog/2006/10/15/a-case-study-in-profiling-queries-in-mysql/" />
+		<meta property="og:site_name" content="A Case Study in Profiling Queries in MySQL" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:site" content="@xaprb" />
+
+
+		
+		<link rel="stylesheet" href="https://www.xaprb.com/css/tachyons.min.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/story.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/descartes.css" />
+		
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+		<link href="https://fonts.googleapis.com/css?family=Quattrocento+Sans:400,400i,700,700i|Quattrocento:400,700|Spectral:400,400i,700,700i&amp;subset=latin-ext" rel="stylesheet">
+		
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.css" integrity="sha384-TEMocfGvRuD1rIAacqrknm5BQZ7W7uWitoih+jMNFXQIbNl16bO8OZmylH/Vi/Ei" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.js" integrity="sha384-jmxIlussZWB7qCuB+PgKG1uLjjxbVVIayPJwi6cG6Zb4YKq0JIw+OMnkkEC7kYCq" crossorigin="anonymous"></script>
+		<script src="https://www.xaprb.com/js/auto-render.min.js"></script> 
+		<script src="https://www.xaprb.com/js/story.js"></script>
+
+	</head>
+	<body class="ma0 bg-white section-blog page-kind-page is-page-true  feature-math feature-figcaption feature-tablecaption feature-figcaption-hidden feature-3dbook-covers feature-hyphenate feature-justify feature-highlight feature-hrfleuron feature-qrcode feature-tweetquote feature-depth">
+		
+		<header class="cover bg-top" style="background-image: url('https://www.xaprb.com/img/default-header-img.jpg'); background-position: center;">
+			<div class="bg-black-30 bb bt">
+
+				<nav class="hide-print sans-serif  border-box pa3 ph5-l">
+					<a href="https://www.xaprb.com/" title="Home">
+						<img src="https://www.xaprb.com/img/logo.jpg" class="w2 h2 br-100" alt="Baron Schwartz&#39;s Website" />
+					</a>
+					<div class="fr h2 pv2 tr">
+						<a class="link f5 ml2 dim near-white" href="/archives/">Archives</a>
+						<a class="link f5 ml2 dim near-white" href="/talks/">Talks</a>
+						<a class="link f5 ml2 dim near-white" href="https://github.com/xaprb"><i class="fab fa-github-square"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://linkedin.com/in/xaprb"><i class="fab fa-linkedin"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://twitter.com/xaprb"><i class="fab fa-twitter-square"></i></a>
+						<a class="link f5 ml2 dim near-white fas fa-rss-square" href="https://www.xaprb.com/index.xml" title="RSS Feed"></a>
+						<a class="link f5 ml2 dim near-white fas fa-search" href="https://www.xaprb.com/search/" role="search" title="Search"></a>
+					</div>
+				</nav>
+
+				<div id="hdr" class="tc-l pv4-ns pv5-l pv2 ph3 ph4-ns">
+					<h1 class="near-white mt1-ns f2 fw3 mb0 mt0 lh-title">A Case Study in Profiling Queries in MySQL</h1>
+					<h2 class="near-white mt3-l mb4-l fw1 f6 f3-l measure-wide-l center lh-copy mt2 mb3">
+						
+						
+							
+								Published
+								<time datetime="2006-10-15T00:00:00Z">Oct 15, 2006</time>
+								<span class="display-print">by Baron Schwartz</span>
+								 in <a href="https://www.xaprb.com/categories/databases" class="no-underline category near-white dim">Databases</a>
+								<span class="display-print">at https://www.xaprb.com/blog/2006/10/15/a-case-study-in-profiling-queries-in-mysql/</span>
+							
+						
+					</h2>
+				</div>
+
+				
+				
+				
+				
+
+			</div>
+		</header>
+		
+		<main role="main">
+		
+<article class="center bg-white br-3 pv1 ph4 lh-copy f5 nested-links mw7">
+	
+
+<p>This is the second in a series of articles on profiling queries in MySQL. In this article I&rsquo;ll demonstrate the technique I described in the <a href="/blog/2006/10/12/how-to-profile-a-query-in-mysql/">first article</a>.</p>
+
+<blockquote>
+<p>Note: I wrote this article in 2006, when I didn&rsquo;t have a clear understanding
+of even simple concepts such as <em>what performance really is</em>. Since then I
+have learned a lot from wise people such as Cary Millsap. In 2012 I founded
+<a href="https://vividcortex.com/">VividCortex, the best database performance optimization and database monitoring platform</a>
+to chase away the kind of ignorance I display in the article below. Enjoy this
+trip down memory lane.</p>
+</blockquote>
+
+<p>I&rsquo;m using 5.0.22-Debian_0ubuntu6.06.2-log for my tests.</p>
+
+<h3 id="example-re-index-a-table-and-measure-the-performance-gain">Example: re-index a table and measure the performance gain</h3>
+
+<p>I started with the following table, and an <code>INSERT</code> statement to populate it with a million rows of data. Aside from the fact that this data is all evenly distributed, this table and data are similar to some tables my coworkers and I redesigned earlier this year (see my article on <a href="/blog/2006/06/14/how-to-re-index-a-large-database-table/">how to re-index a large database table</a>).</p>
+
+<pre><code class="language-sql">CREATE TABLE `tracking` (
+  `id` int(11) NOT NULL auto_increment,
+  `day` date NOT NULL,
+  `ad` int(11) NOT NULL,
+  `clicks` int(11) NOT NULL,
+  `impressions` int(11) NOT NULL,
+  `client` int(11) NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `ad` (`ad`,`day`),
+  KEY `day` (`day`),
+  KEY `client` (`client`)
+) ENGINE=InnoDB;
+
+insert into tracking(day, ad, clicks, impressions, client)
+    select date_add('2006-01-01', interval a.i - 1 day),
+        b.i,
+        rand() * 100,
+        rand() * 100,
+        rand() * 20
+    from numbers as a
+        cross join numbers as b
+    where a.i &lt;= 1000 and b.i &lt;= 1000;
+</code></pre>
+
+<p>This table is designed with a surrogate key that isn&rsquo;t used at all, and prevents the table from being clustered day-first, which is how it tends to be queried. Here&rsquo;s a typical query for this data, which consistently takes 0.58 seconds to run on my machine:</p>
+
+<pre><code class="language-sql">select day, ad, sum(clicks), sum(impressions)
+from tracking
+where client = 11 and day between '2007-01-01' and '2007-01-31'
+group by day;
+</code></pre>
+
+<h3 id="step-1-measure-the-query-before-re-indexing">Step 1: Measure the query before re-indexing</h3>
+
+<p>I began by measuring the query against the table as currently designed. I ran <code>SHOW STATUS</code> once, ran the query, then ran <code>SHOW STATUS</code> twice more. I put all three sets of data into a spreadsheet, with columns titled <code>Before</code>, <code>After1</code>, and <code>Calibration</code>. I then added a column called <code>TotalCost</code>, whose formula is <code>After1 - Before - (Calibration - After1)</code>. You can read the first article for more on why I use this math to subtract out the effects of running <code>SHOW STATUS</code> itself.</p>
+
+<p>I&rsquo;ll show you a synopsis of the data in a bit, but in case you&rsquo;re curious, <a href="/media/2006/10/status-before-indexing.csv">here&rsquo;s the raw data in CSV format</a>.</p>
+
+<h3 id="step-2-re-index-and-measure-again">Step 2: Re-index and measure again</h3>
+
+<p>I re-indexed the table, removing the surrogate key and clustering on <code>day, ad</code>. Now I have the following table:</p>
+
+<pre><code class="language-sql">CREATE TABLE `tracking` (
+  `day` date NOT NULL,
+  `ad` int(11) NOT NULL,
+  `clicks` int(11) NOT NULL,
+  `impressions` int(11) NOT NULL,
+  `client` int(11) NOT NULL,
+  PRIMARY KEY  (`day`,`ad`),
+  KEY `ad` (`ad`),
+  KEY `client` (`client`)
+) ENGINE=InnoDB;
+</code></pre>
+
+<p>The same query now consistently runs in two or three hundredths of a second. Here are the <code>SHOW STATUS</code> <a href="/media/2006/10/status-after-indexing.csv">numbers for the redesigned table</a>.</p>
+
+<h3 id="just-the-important-numbers">Just the important numbers</h3>
+
+<p>That&rsquo;s a lot of numbers to look at, so here&rsquo;s a synopsis of all the numbers that didn&rsquo;t come out to zero in both cases:</p>
+
+<table>
+<thead>
+<tr>
+<th>Variable_name</th>
+<th>Design1</th>
+<th>Design2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Com_select</td>
+<td>1</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Created_tmp_tables</td>
+<td>1</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Handler_read_key</td>
+<td>1574</td>
+<td>2</td>
+</tr>
+
+<tr>
+<td>Handler_read_next</td>
+<td>49987</td>
+<td>31000</td>
+</tr>
+
+<tr>
+<td>Handler_read_rnd</td>
+<td>31</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Handler_read_rnd_next</td>
+<td>32</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Handler_update</td>
+<td>1540</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Handler_write</td>
+<td>31</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_buffer_pool_read_ahead_rnd</td>
+<td>3</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_buffer_pool_read_ahead_seq</td>
+<td>169</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_buffer_pool_read_requests</td>
+<td>205242</td>
+<td>3969</td>
+</tr>
+
+<tr>
+<td>Innodb_buffer_pool_reads</td>
+<td>86</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_data_read</td>
+<td>46153728</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_data_reads</td>
+<td>265</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_pages_read</td>
+<td>2817</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Innodb_rows_read</td>
+<td>49987</td>
+<td>31001</td>
+</tr>
+
+<tr>
+<td>Questions</td>
+<td>1</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Select_range</td>
+<td></td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Sort_rows</td>
+<td>31</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Sort_scan</td>
+<td>1</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Table_locks_immediate</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+<p>I gave a high-level, hand-waving overview of interpreting results in my previous article, because there&rsquo;s just too much to go over in one article. Hopefully you can sink your teeth into this example. For example, you can see the first design created a temporary table for some reason, made more index reads, made lots more requests to the buffer pool, and read a lot more bytes of data. What&rsquo;s going on here?</p>
+
+<p>As I mentioned in the first article, it really helps to</p>
+
+<ol>
+<li>time the query (been there, done that: 0.03 seconds versus 0.58)</li>
+<li><code>EXPLAIN</code> the query</li>
+</ol>
+
+<p>The <code>EXPLAIN</code> is the missing link here. Here it is:</p>
+
+<pre><code class="language-sql">*************************** Design 1
+           id: 1
+  select_type: SIMPLE
+        table: tracking
+         type: ref
+possible_keys: day,client
+          key: client
+      key_len: 4
+          ref: const
+         rows: 59898
+        Extra: Using where; Using temporary; Using filesort
+
+*************************** Design 2
+           id: 1
+  select_type: SIMPLE
+        table: tracking
+         type: range
+possible_keys: PRIMARY,client
+          key: PRIMARY
+      key_len: 3
+          ref: NULL
+         rows: 46284
+        Extra: Using where
+</code></pre>
+
+<p>The query against the first table required a temporary table and filesort. It scanned the <code>client</code> key and did bookmark lookups to the clustered index. The second query just scanned a range of the clustered index. Armed with this knowledge, look back at the actual numbers; it&rsquo;s pretty amazing how much extra work is caused in the first case by having to navigate a secondary index and then a clustered index. The most dramatic difference is how the InnoDB buffer pool is used. Here are some highlights:</p>
+
+<ul>
+<li>The first query made 50 times the requests to the buffer pool.</li>
+<li>The first query had to go to disk 86 times to satisfy a buffer pool read request, but the second query never had a buffer pool miss at all.</li>
+<li>The first query needed to read 62% more rows, because it had to shotgun through the whole table looking for data.</li>
+<li>The first query had to make more than a thousand times as many key reads as the second.</li>
+</ul>
+
+<p>I want to point out that the number of times a buffer pool read request could be satisfied without going to disk&mdash;every time in the second query&mdash;is really important. It means the first query kept requesting data that turned out not to be in memory, whereas the second query kept requesting data and it was already in memory. Why is this? Well, the second query was confined to a contiguous range of the disk, so once that range was read into memory, it stayed there. The first query had to keep requesting blocks from every part of the table, and they couldn&rsquo;t all fit in the buffer pool, so some of them were getting pushed out and re-read later. How much did this happen? About 44 MiB, according to <code>Innodb_data_read</code>. Remember, even if you have to get just one row, InnoDB reads an entire block from disk, which may be really inefficient&mdash;the size of a row divided by 16,384 bytes per block.</p>
+
+<p>I hope you agree that&rsquo;s much more concrete and useful than comparing execution time. Armed with this knowledge, you can understand which optimizations really make a difference.</p>
+
+<h3 id="one-really-strange-result">One really strange result</h3>
+
+<p>One thing I didn&rsquo;t show you about those two queries was the value of <code>Last_query_cost</code>. That&rsquo;s because it showed the slower, more data-intensive query actually having a <em>lower</em> cost than the faster one:</p>
+
+<table>
+<thead>
+<tr>
+<th>Variable_name</th>
+<th>Design1</th>
+<th>Design2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Last_query_cost</td>
+<td>20343.599000</td>
+<td>71039.632551</td>
+</tr>
+</tbody>
+</table>
+
+<p>That&rsquo;s pretty bizarre, isn&rsquo;t it? I don&rsquo;t know how the query cost is calculated; I believe the optimizer calculates it in advance of actually executing the query. It definitely doesn&rsquo;t match the actual cost of executing these queries. It is usually more in line with the true cost, but not always. You should not rely on it absolutely.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>The example I gave should make it pretty clear how much you can measure about query performance&mdash;execution time is only one data point. In the third article in this series, I&rsquo;ll take the wraps off a shiny new tool that can do all this tedious math for you in the blink of an eye. Stay tuned.</p>
+
+</article>
+
+		</main>
+		
+				<div class="hide-print sans-serif f6 f5-l mt5 ph3 pb6 center nested-copy-line-height lh-copy nested-links mw-100 measure-wide">
+		<div class="about-the-author">
+		
+			
+			
+				
+					<p><a href="/about/"><img src="https://d33wubrfki0l68.cloudfront.net/843019e4d498ed7c38871b8f93da3ccfc0f91632/7e911/baron-square.jpg" alt="Baron Schwartz" /></a></p>
+
+<p>I&rsquo;m the founder and CTO of <a href="https://vividcortex.com">VividCortex</a>, author of
+several books, and creator of various open-source software. I write about topics such as technology, entrepreneurship, and fitness, and I tweet at <a href="https://twitter.com/xaprb">@xaprb</a>. <a href="/about/">More about me</a>.</p>
+
+				
+			
+		
+		</div>
+		
+		<div class="subscribe-form cb w-100 pt3">
+			<form action="//xaprb.us19.list-manage.com/subscribe?u=6ee277790a99c26a414c9693f&amp;id=703c46c578" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" target="_blank" novalidate>
+				<input class="w-50 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l mr2" type="email" placeholder="Subscribe for email updates!" name="EMAIL" id="mce-EMAIL">
+				<input class="w-40 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l white bg-mid-gray" type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe">
+			</form>
+		</div>
+		
+	</div>
+
+		
+		
+		
+		<footer class="hide-print sans-serif f6 fw1 bg-black near-white bottom-0 w-100 pa3" role="contentinfo">
+			<p class="w-50 fr tr">
+			<a class="no-underline near-white" href="https://github.com/xaprb/story"><img class="dib" title="Made with Hugo and Story" alt="Story logo" src="https://www.xaprb.com/img/story-logo-white.svg" style="width: 1.5rem; height: 1.5rem" /></a>
+			</p>
+			<p class="w-50 near-white">
+				&copy; 2019 Baron Schwartz
+			</p>
+		</footer>
+		
+	
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-101883-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+	
+	</body>
+</html>

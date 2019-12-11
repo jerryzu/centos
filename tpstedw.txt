@@ -1,0 +1,15 @@
+列出所有的引用源
+1.datax引用源
+select task_id, m.*
+from json_ctrl  m
+where writer_tablename in ('edw_web_ply_base','edw_web_ply_ci','ods_cthx_web_ply_insured','ods_cthx_web_ply_applicant','ods_cthx_web_ply_ent_tgt')
+
+2.sql引用源
+select *
+from t_task m
+where m.task_type = 1
+and
+( `path` like '%edw_web_ply_base.sql'
+or 
+ `path` like '%edw_web_ply_ci.sql'
+)

@@ -1,0 +1,739 @@
+目录结构
+22.1 performance Schema 快速入门
+22.2 Performance Schema 配置
+
+22.2.1 mysql编译的时候 修改Performance Schema配置
+22.2.2 mysql启动的时候 修改Performance Schema配置
+22.2.3 mysql运行过程中 修改Performance Schema配置
+22.3 Performance Schema 查询
+22.4 Performance Schema Instrument Naming Conventions
+22.5 Performance Schema Status 监控
+22.6 Performance Schema 原子性，分子性 事件
+22.7 Performance Schema Statement 诊断
+22.8 Performance Schema 基本表特征
+22.9 Performance Schema 表的描述
+
+22.9.1 Performance Schema 表的索引
+22.9.2 Performance Schema Setup 类型的表
+22.9.3 Performance Schema Instance 类型的表
+22.9.4 Performance Schema Wait Event 类型的表
+22.9.5 Performance Schema Stage Event 类型的表
+22.9.6 Performance Schema Statement Event 类型的表
+22.9.7 Performance Schema Connection 类型的表
+22.9.8 Performance Schema Connection Attribute 类型的表
+22.9.9 Performance Schema Summary 类型的表
+22.9.10 Performance Schema 其他类型的表
+22.10 Performance Schema 变量与选项
+22.11 Performance Schema 命令选项
+22.12 Performance Schema 系统变量
+22.13 Performance Schema status变量
+22.14 Performance Schema 与插件
+22.15 使用Performance Schema 来诊断问题
+
+22.15.1 使用Performance Schema来替代profiling
+心得： performance_schema的使用
+架构图
+Mysql 5.5 Performance schema
+5_5
+
+Mysql 5.6 Performance schema
+5_6
+
+Mysql 5.7 Performance schema
+5_7
+
+consumer 层次图
+consumer
+
+Statement 诊断
+statement
+
+22.1 performance Schema 快速入门
+这一节简单的讲解如何使用performance schema，并附上例子。如： Section 22.15, “Using the Performance Schema to Diagnose Problems”
+
+如果要让mysql可用，必须在mysql编译的时候built进来。通过检查服务器的帮助信息，你也可以确认一下perf 是否可用。如果可用，会有一些提示如：
+
+shell> mysqld --verbose --help
+...
+  --performance_schema
+                      Enable the performance schema.
+  --performance_schema_events_waits_history_long_size=#
+                     Number of rows in events_waits_history_long.
+...
+如果以上变量没有出现在你的output上，那么说明你的mysql不支持performance schema。
+请关注 Section 22.2, “Performance Schema Configuration”.
+
+如果你performance schema被支持，那么在mysql5.6.6开始就已经默认打开的。
+如果要显示打开关闭PS，那么就在mysql启动的时候加上performance_schema变量，
+并且给予适当的值。比如：在你的my.cnf文件中
+
+[mysqld]
+performance_schema=ON
+一旦这样配置后，当mysql启动时，就会自动初始化performance schema。为了验证初始化是否成功，
+可以使用这样的语句：
+
+mysql> SHOW VARIABLES LIKE 'performance_schema';
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| performance_schema | ON    |
++--------------------+-------+
+ON表示成功，OFF表示有错误，请查看相关error log 定位错误。
+
+performance schema 是以存储引擎的方式实现的，你可以通过INFORMATION_SCHEMA.ENGINES 或者
+show engines来确认：
+
+mysql> SELECT * FROM INFORMATION_SCHEMA.ENGINES
+    -> WHERE ENGINE='PERFORMANCE_SCHEMA'\G
+*************************** 1. row ***************************
+      ENGINE: PERFORMANCE_SCHEMA
+     SUPPORT: YES
+     COMMENT: Performance Schema
+TRANSACTIONS: NO
+          XA: NO
+  SAVEPOINTS: NO
+
+mysql> SHOW ENGINES\G
+...
+      Engine: PERFORMANCE_SCHEMA
+     Support: YES
+     Comment: Performance Schema
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+...
+你可以像使用正常database一样使用performance schema。
+比如：use performance_schema, 以及show语法。
+
+performance_schema数据库名必须是小写。可以使用show create table 查看表：
+
+mysql> SHOW CREATE TABLE setup_timers\G
+*************************** 1. row ***************************
+       Table: setup_timers
+Create Table: CREATE TABLE `setup_timers` (
+  `NAME` varchar(64) NOT NULL,
+  `TIMER_NAME` enum('CYCLE','NANOSECOND','MICROSECOND','MILLISECOND','TICK')
+   NOT NULL
+) ENGINE=PERFORMANCE_SCHEMA DEFAULT CHARSET=utf8
+也可以查询 INFORMATION_SCHEMA.COLUMNS来查看列。
+
+performance_schema里面的表可以根据名字分类为：
+
+Current events
+event histories
+summaries
+object instances
+setup (configuration)
+下面有些例子来简单的使用这些表，详细的使用请看：Section 22.9, “Performance Schema Table Descriptions”.
+
+一开始，不是所有的instrument 和 consumer 都会被enable ， 所以一开始他们不会收集所有的事件。
+为了让他们都enable 或者 enable event timing。 执行以下两条语句
+
+mysql> UPDATE setup_instruments SET ENABLED = 'YES', TIMED = 'YES';
+Query OK, 338 rows affected (0.12 sec)
+mysql> UPDATE setup_consumers SET ENABLED = 'YES';
+Query OK, 8 rows affected (0.00 sec)
+如果想查看某个时刻的等待事件，可以查询 events_waits_current表。它记录了每个thread最近的监控信息。
+
+mysql> SELECT * FROM events_waits_current\G
+*************************** 1. row ***************************
+            THREAD_ID: 0
+             EVENT_ID: 5523
+           EVENT_NAME: wait/synch/mutex/mysys/THR_LOCK::mutex
+               SOURCE: thr_lock.c:525
+          TIMER_START: 201660494489586
+            TIMER_END: 201660494576112
+           TIMER_WAIT: 86526
+                SPINS: NULL
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          OBJECT_TYPE: NULL
+OBJECT_INSTANCE_BEGIN: 142270668
+     NESTING_EVENT_ID: NULL
+            OPERATION: lock
+      NUMBER_OF_BYTES: NULL
+                FLAGS: 0
+...
+这个事件说明 thread 0 在等待86526皮秒 来获得一个锁THR_LOCK::mutex，而这个锁是mysys子系统中。
+以下是列的一些描述
+
+id： thread id
+event name：别监控的instrument名字
+timer 类型的列： 时间，以皮秒为基准单位
+history 表包含了一些列相同事件的历史记录，就如同current-events 一样，不同的是，
+有更多的记录来说明服务器最近做了什么，而不是当前做了什么。events_waits_history & events_waits_history_long 记录了每个thread最近10条和10000条event。
+
+mysql> SELECT EVENT_ID, EVENT_NAME, TIMER_WAIT
+    -> FROM events_waits_history WHERE THREAD_ID = 13
+    -> ORDER BY EVENT_ID;
++----------+-----------------------------------------+------------+
+| EVENT_ID | EVENT_NAME                              | TIMER_WAIT |
++----------+-----------------------------------------+------------+
+|       86 | wait/synch/mutex/mysys/THR_LOCK::mutex  |     686322 |
+|       87 | wait/synch/mutex/mysys/THR_LOCK_malloc  |     320535 |
+|       88 | wait/synch/mutex/mysys/THR_LOCK_malloc  |     339390 |
+|       89 | wait/synch/mutex/mysys/THR_LOCK_malloc  |     377100 |
+|       90 | wait/synch/mutex/sql/LOCK_plugin        |     614673 |
+|       91 | wait/synch/mutex/sql/LOCK_open          |     659925 |
+|       92 | wait/synch/mutex/sql/THD::LOCK_thd_data |     494001 |
+|       93 | wait/synch/mutex/mysys/THR_LOCK_malloc  |     222489 |
+|       94 | wait/synch/mutex/mysys/THR_LOCK_malloc  |     214947 |
+|       95 | wait/synch/mutex/mysys/LOCK_alarm       |     312993 |
++----------+-----------------------------------------+------------+
+如果这个表满了，那么新的event会被加进来，踢掉最老的那个。
+
+summary 表提供了整个时间段的一些统计信息。他们统计事件的处理方式和之前都不一样。
+如果想知道某个instrument 被执行的最频繁，或者发生的频率非常高，可以通过排序 events_waits_summary_global_by_event_name表，根据 COUNT_STAR 或者 SUM_TIMER_WAIT列。
+
+
+mysql> SELECT EVENT_NAME, COUNT_STAR
+    -> FROM events_waits_summary_global_by_event_name
+    -> ORDER BY COUNT_STAR DESC LIMIT 10;
++---------------------------------------------------+------------+
+| EVENT_NAME                                        | COUNT_STAR |
++---------------------------------------------------+------------+
+| wait/synch/mutex/mysys/THR_LOCK_malloc            |       6419 |
+| wait/io/file/sql/FRM                              |        452 |
+| wait/synch/mutex/sql/LOCK_plugin                  |        337 |
+| wait/synch/mutex/mysys/THR_LOCK_open              |        187 |
+| wait/synch/mutex/mysys/LOCK_alarm                 |        147 |
+| wait/synch/mutex/sql/THD::LOCK_thd_data           |        115 |
+| wait/io/file/myisam/kfile                         |        102 |
+| wait/synch/mutex/sql/LOCK_global_system_variables |         89 |
+| wait/synch/mutex/mysys/THR_LOCK::mutex            |         89 |
+| wait/synch/mutex/sql/LOCK_open                    |         88 |
++---------------------------------------------------+------------+
+
+mysql> SELECT EVENT_NAME, SUM_TIMER_WAIT
+    -> FROM events_waits_summary_global_by_event_name
+    -> ORDER BY SUM_TIMER_WAIT DESC LIMIT 10;
++----------------------------------------+----------------+
+| EVENT_NAME                             | SUM_TIMER_WAIT |
++----------------------------------------+----------------+
+| wait/io/file/sql/MYSQL_LOG             |     1599816582 |
+| wait/synch/mutex/mysys/THR_LOCK_malloc |     1530083250 |
+| wait/io/file/sql/binlog_index          |     1385291934 |
+| wait/io/file/sql/FRM                   |     1292823243 |
+| wait/io/file/myisam/kfile              |      411193611 |
+| wait/io/file/myisam/dfile              |      322401645 |
+| wait/synch/mutex/mysys/LOCK_alarm      |      145126935 |
+| wait/io/file/sql/casetest              |      104324715 |
+| wait/synch/mutex/sql/LOCK_plugin       |       86027823 |
+| wait/io/file/sql/pid                   |       72591750 |
++----------------------------------------+----------------+
+以上说明THR_LOCK_malloc 非常hot。
+
+instance 表记录了什么类型的object被instrumented。一个被instrumented的object，当被server使用时就会产生一个event。这些表提供了event名以及简单的阐述。
+比如：file_instances 就列出了file IO相关的instance of instrument。
+
+xxx:performance_schema> show tables like '%_instances'
+    -> ;
++--------------------------------------------+
+| Tables_in_performance_schema (%_instances) |
++--------------------------------------------+
+| cond_instances                             |
+| file_instances                             |
+| mutex_instances                            |
+| rwlock_instances                           |
+| socket_instances                           |
++--------------------------------------------+
+5 rows in set (0.00 sec)
+mysql> SELECT * FROM file_instances\G
+*************************** 1. row ***************************
+ FILE_NAME: /opt/mysql-log/60500/binlog.000007
+EVENT_NAME: wait/io/file/sql/binlog
+OPEN_COUNT: 0
+*************************** 2. row ***************************
+ FILE_NAME: /opt/mysql/60500/data/mysql/tables_priv.MYI
+EVENT_NAME: wait/io/file/myisam/kfile
+OPEN_COUNT: 1
+*************************** 3. row ***************************
+ FILE_NAME: /opt/mysql/60500/data/mysql/columns_priv.MYI
+EVENT_NAME: wait/io/file/myisam/kfile
+OPEN_COUNT: 1
+...
+setup表用来配置和显示监控信息的。 例如：什么样的timer 被使用，
+请查询setup_timers
+
+mysql> SELECT * FROM setup_timers;
++-----------+-------------+
+| NAME      | TIMER_NAME  |
++-----------+-------------+
+| idle      | MICROSECOND |
+| wait      | CYCLE       |
+| stage     | NANOSECOND  |
+| statement | NANOSECOND  |
++-----------+-------------+
+setup_instruments 列出了哪些event会被收集与监控：
+
+mysql> SELECT * FROM setup_instruments;
++------------------------------------------------------------+---------+-------+
+| NAME                                                       | ENABLED | TIMED |
++------------------------------------------------------------+---------+-------+
+...
+| wait/synch/mutex/sql/LOCK_global_read_lock                 | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_global_system_variables          | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_lock_db                          | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_manager                          | YES     | YES   |
+...
+| wait/synch/rwlock/sql/LOCK_grant                           | YES     | YES   |
+| wait/synch/rwlock/sql/LOGGER::LOCK_logger                  | YES     | YES   |
+| wait/synch/rwlock/sql/LOCK_sys_init_connect                | YES     | YES   |
+| wait/synch/rwlock/sql/LOCK_sys_init_slave                  | YES     | YES   |
+...
+| wait/io/file/sql/binlog                                    | YES     | YES   |
+| wait/io/file/sql/binlog_index                              | YES     | YES   |
+| wait/io/file/sql/casetest                                  | YES     | YES   |
+| wait/io/file/sql/dbopt                                     | YES     | YES   |
+...
+相应了解如何翻译这些instrument 的名字，请看：Section 22.4, “Performance Schema Instrument Naming Conventions”.
+
+为了控制哪些event是不是instrument，可以给enabled设置yes or no。
+
+mysql> UPDATE setup_instruments SET ENABLED = 'NO'
+    -> WHERE NAME = 'wait/synch/mutex/sql/LOCK_mysql_create_db';
+performance schema 使用收集的events 来更新performance_schema 数据库的那些表，这些表扮演着事件信息消费者的角色。setup_consumers 列出了可用的消费者 以及哪些是enabled。
+
+mysql> SELECT * FROM setup_consumers;
++--------------------------------+---------+
+| NAME                           | ENABLED |
++--------------------------------+---------+
+| events_stages_current          | NO      |
+| events_stages_history          | NO      |
+| events_stages_history_long     | NO      |
+| events_statements_current      | YES     |
+| events_statements_history      | NO      |
+| events_statements_history_long | NO      |
+| events_waits_current           | NO      |
+| events_waits_history           | NO      |
+| events_waits_history_long      | NO      |
+| global_instrumentation         | YES     |
+| thread_instrumentation         | YES     |
+| statements_digest              | YES     |
++--------------------------------+---------+
+22.2 Performance Schema 配置
+22.2.1 mysql编译的时候 修改Performance Schema配置
+目前，一般的binary版本都会默认支持PS，不过最后还是想官方的provider 确认一下。
+如果使用的是源码包，用cmake WITH_PERFSCHEMA_STORAGE_ENGINE 使其ok
+
+shell> cmake . -DWITH_PERFSCHEMA_STORAGE_ENGINE=1
+如何check是否支持performance schema？
+第一：
+
+shell> mysqld --verbose --help
+...
+  --performance_schema
+                      Enable the performance schema.
+  --performance_schema_events_waits_history_long_size=#
+                      Number of rows in events_waits_history_long.
+...
+也可以
+
+mysql> SHOW ENGINES\G
+...
+      Engine: PERFORMANCE_SCHEMA
+     Support: YES
+     Comment: Performance Schema
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+...
+注意：show engines 中即便包含了PERFORMANCE_SCHEMA，只能说明已经支持，不代表已经开启。
+如果要开启，必须在start up阶段设置，请看下一章节。
+
+22.2.2 mysql启动的时候 修改Performance Schema配置
+假设编译的时候已经支持ps，那么mysql5.6.6 版本以及以上版本都会默认enable 。
+开启，只需要在my.cnf中
+
+[mysqld]
+performance_schema=ON
+如果server没有足够多的内存用于初始化performance schema，那么它会自己disable 掉，然后没有instrument相关信息。
+
+mysql5.6.4版本开始，允许instrument 和 consumer在server startup阶段配置。之前的版本都
+只能在runtime阶段用update配置。
+
+在startup阶段控制instrument，可以用这种形式：
+
+--performance-schema-instrument='instrument_name=value'
+这里面instrument_name 指的是类似wait/synch/mutex/sql/LOCK_open这种instrument，
+value 就是下面其中一种：
+
+OFF，False， or 0 关闭这个instrument
+ON，TRUE，or 1 开启这个instrument
+counted：开启并且统计这个instrument
+--performance-schema-instrument 只能指定一个instrument名字。多个instances可以在多instrument中配置。另外：模式也是被允许的。如：
+
+--performance-schema-instrument='wait/synch/cond/%=COUNTED'
+关闭所有instrument，使用：
+
+--performance-schema-instrument='%=OFF'
+在startup阶段控制consumer
+
+--performance-schema-consumer-$consumer_name=$value
+这里面$consumer_name 指的是consumer 如：events_waits_history，
+$value 为：
+
+OFF，FALSE，or 0： 不收集这个consumer相关的事件
+ON，TRUE，or 1 ： 收集这个consumer相关的事件
+例如：开启events_waits_history consumer，
+
+--performance-schema-consumer-events-waits-history=ON
+合法的consumer的名字可以在setup_consumers表中找到。模式匹配是不允许的。
+consumer的名字在setup_consumers中以下划线表示，但是在starup 阶段的my.cnf配置文件中，
+下划线和横线都是被允许的。
+
+performance schema的默认系统变量：
+
+mysql> SHOW VARIABLES LIKE 'perf%';
++--------------------------------------------------------+---------+
+| Variable_name                                          | Value   |
++--------------------------------------------------------+---------+
+| performance_schema                                     | ON      |
+| performance_schema_accounts_size                       | 100     |
+| performance_schema_digests_size                        | 200     |
+| performance_schema_events_stages_history_long_size     | 10000   |
+| performance_schema_events_stages_history_size          | 10      |
+| performance_schema_events_statements_history_long_size | 10000   |
+| performance_schema_events_statements_history_size      | 10      |
+| performance_schema_events_waits_history_long_size      | 10000   |
+| performance_schema_events_waits_history_size           | 10      |
+| performance_schema_hosts_size                          | 100     |
+| performance_schema_max_cond_classes                    | 80      |
+| performance_schema_max_cond_instances                  | 1000    |
+...
+performance_schema ON 和 OFF 表示是否开启和关闭。其他变量表示：表sizes（number of rows）以及内存分配
+
+一旦开启了performance schema，mysql就会分配内存，这个内存表示最小值，可能会更大，所以
+
+需要根据自己的情况设置一个合理的值。
+
+如果要改变系统变量的值，目前只能在startup阶段修改。如：在my.cnf中：
+
+[mysqld]
+performance_schema
+performance_schema_events_waits_history_size=20
+performance_schema_events_waits_history_long_size=15000
+mysql5.6.6 以及以上版本，如果你不显示的设置系统变量，那么mysql自己会设置默认的值。
+
+22.2.3 mysql运行过程中 修改Performance Schema配置
+setup表：如果你有update权限，可以直接更改监控行为。
+
+mysql> SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+    -> WHERE TABLE_SCHEMA = 'performance_schema'
+    -> AND TABLE_NAME LIKE 'setup%';
++-------------------+
+| TABLE_NAME        |
++-------------------+
+| setup_actors      |
+| setup_consumers   |
+| setup_instruments |
+| setup_objects     |
+| setup_timers      |
++-------------------+
+如果要查看哪些事件选择了哪些时间，可以查看setup_timers
+
+mysql> SELECT * FROM setup_timers;
++-----------+-------------+
+| NAME      | TIMER_NAME  |
++-----------+-------------+
+| idle      | MICROSECOND |
+| wait      | CYCLE       |
+| stage     | NANOSECOND  |
+| statement | NANOSECOND  |
++-----------+-------------+
+setup_instruments 列出了哪些instrument事件被收集
+setup_consumers 列出了某一类consumer的instrument事件实际被收集
+这是一个典型的生产者-消费者模式，即便你设置了setup_instruments=xx，
+但是如果setup_consumers没有设置对应的内容（即没有消费者），那么实际的instrument
+也不会收集数据到performance schema的表中。
+
+22.2.3.1 performance_schema事件计时
+计时事件，主要用于提供事件到底话费了多少时间。当然，你也可以配置不开启计时功能。
+
+以下两个表主要提供timer信息：
+
+performance_timers: 列出了可用的timers和他们的特点
+setup_timers : 描述了哪些instrument对应哪些timers
+setup_timer是里面的每一条记录都必须是performance_timers里面定义好的内容。
+
+mysql> SELECT * FROM performance_timers;
++-------------+-----------------+------------------+----------------+
+| TIMER_NAME  | TIMER_FREQUENCY | TIMER_RESOLUTION | TIMER_OVERHEAD |
++-------------+-----------------+------------------+----------------+
+| CYCLE       |      2389029850 |                1 |             72 |
+| NANOSECOND  |            NULL |             NULL |           NULL |
+| MICROSECOND |         1000000 |                1 |            585 |
+| MILLISECOND |            1035 |                1 |            738 |
+| TICK        |             101 |                1 |            630 |
++-------------+-----------------+------------------+----------------+
+一般都采用picsecond皮秒 作为基准单位。
+
+22.2.3.2 performance_schema 过滤事件
+事件处理是一种典型的生产者-消费者模式
+
+Instrument 生产事件，然后被收集。setup_instruments表列出来哪些instrument 可以被收集。
+mysql> SELECT * FROM setup_instruments;
++------------------------------------------------------------+---------+-------+
+| NAME                                                       | ENABLED | TIMED |
++------------------------------------------------------------+---------+-------+
+...
+| wait/synch/mutex/sql/LOCK_global_read_lock                 | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_global_system_variables          | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_lock_db                          | YES     | YES   |
+| wait/synch/mutex/sql/LOCK_manager                          | YES     | YES   |
+...
+setup_instruments 提供了最基本的形式来控制事件的产生。其他的事件产生形式（如：基于某一个object或者thread）可以参考：Section 22.2.3.3, “Event Pre-Filtering”
+
+Performan schema里面的那些表，就是用来事件的目的地和消费事件用的。setup_consumers表列出了很多类型的consumer
+mysql> SELECT * FROM setup_consumers;
++--------------------------------+---------+
+| NAME                           | ENABLED |
++--------------------------------+---------+
+| events_stages_current          | NO      |
+| events_stages_history          | NO      |
+| events_stages_history_long     | NO      |
+| events_statements_current      | YES     |
+| events_statements_history      | NO      |
+| events_statements_history_long | NO      |
+| events_waits_current           | NO      |
+| events_waits_history           | NO      |
+| events_waits_history_long      | NO      |
+| global_instrumentation         | YES     |
+| thread_instrumentation         | YES     |
+| statements_digest              | YES     |
++--------------------------------+---------+
+对于监控事件的过滤分为不同的阶段：
+
+Pre-filtering: 修改Performance schema的配置（开启或者关闭相应的 instrument 或者 consumer），可以让一部分事件从生产者中收集然后只影响部分consumer. pre-filtering 完成后
+会所有用户产生全局影响。
+为什么要使用pre-filtering
+
+* 减少负载。 虽然开启所有的事件监控也只会有少许压力负载。 但是你还想竟可能的降低负载，
+比如：你可以关闭一些不用的功能，如计时。
+
+* 避免填充你不关心的current-events or history表。比如：你只开启了文件相关的instrument，那么那些非文件的记录就不会填充在current-events or history表中。那么在post-filtering 中，也不会有相关记录。
+
+* 避免维护一些你不关心的事件表。如果你关闭了某些consumer，服务器就不会话费事件来维护consumer对于的destination表。举例：如果你不关心历史记录事件，你就可以关闭 history table consumer 来提升性能。
+
+Post-filtering： 需要用到一些查询语句（where子句）来过滤。Post-filtering是基于用户的不同用户不一样。
+22.2.3.3 Pre-Filtering 事件
+Pre-Filtering 既可以用在 producer ， 也可以用在 consumer 中
+
+配置pre-filtering用在 producer上，主要有这些表
+
+setup_instruments : 如果对应的instrument关闭了，那么就不会收集对应event的信息，即便是production-related setup 表。
+setup_objects : 控制了是否监控特定对象
+threads ： 是否每一个thread都会被监控
+setup_actors: 决定了哪些host，user，role的foreground thread被监控。
+配置pre-filtering用在 consumer上，主要是setup_consumers 这张表。这决定了被收集的event会被发送的目的地。setup_consumers 也会潜在影响production。如果给定的事件没有被配置发送到任何地方（没有consumer），那么performance schema 也不会produce 它。
+修改以上表，基本上都会立刻生效。但是也有一些例外：
+
+某些setup_instruments 只在server startup阶段生效，即便你在running 阶段设置也是没有用的。
+他们就是： mutexes, conditions, and rwlocks
+setup_actors 只影响foreground thread，并且只会对新进来的thread有影响。已经存在的thread不受影响。
+即便你修改了以上配置，performance schema不会flush 信息到history表。原来的记录还是存在current-events and history tables ，直到被新的event替换。关闭instrument，也是一样。
+当然，你可以truncate table 来情况history历史表。
+
+你也许也想使用truncate 来清空summary类型的表。遗憾的是truncate summary类型的表只会将summary列设置为0或者null，不会删除数据。 events_statements_summary_by_digest例外。
+
+22.2.3.3.1 Pre-Filtering by Instrument
+更改立刻生效，部分必须在startup阶段（mutexes, conditions, and rwlocks）
+
+例子：
+
+* Disable all instruments:
+
+mysql> UPDATE setup_instruments SET ENABLED = 'NO';
+Now no events will be collected.
+
+* Disable all file instruments, adding them to the current set of disabled instruments:
+
+mysql> UPDATE setup_instruments SET ENABLED = 'NO'
+    -> WHERE NAME LIKE 'wait/io/file/%';
+
+* Disable only file instruments, enable all other instruments:
+
+mysql> UPDATE setup_instruments
+    -> SET ENABLED = IF(NAME LIKE 'wait/io/file/%', 'NO', 'YES');
+
+* Enable all but those instruments in the mysys library:
+
+mysql> UPDATE setup_instruments
+    -> SET ENABLED = CASE WHEN NAME LIKE '%/mysys/%' THEN 'YES' ELSE 'NO' END;
+
+* Disable a specific instrument:
+
+mysql> UPDATE setup_instruments SET ENABLED = 'NO'
+    -> WHERE NAME = 'wait/synch/mutex/mysys/TMPDIR_mutex';
+
+* To toggle the state of an instrument, “flip” its ENABLED value:
+
+mysql> UPDATE setup_instruments
+    -> SET ENABLED = IF(ENABLED = 'YES', 'NO', 'YES')
+    -> WHERE NAME = 'wait/synch/mutex/mysys/TMPDIR_mutex';
+
+* Disable timing for all events:
+
+mysql> UPDATE setup_instruments SET TIMED = 'NO';
+22.2.3.3.2 Pre-Filtering by Object
+更改后，立刻生效。
+
+例子1：
+
+mysql> SELECT * FROM setup_objects;
++-------------+--------------------+-------------+---------+-------+
+| OBJECT_TYPE | OBJECT_SCHEMA      | OBJECT_NAME | ENABLED | TIMED |
++-------------+--------------------+-------------+---------+-------+
+| TABLE       | mysql              | %           | NO      | NO    |
+| TABLE       | performance_schema | %           | NO      | NO    |
+| TABLE       | information_schema | %           | NO      | NO    |
+| TABLE       | %                  | %           | YES     | YES   |
++-------------+--------------------+-------------+---------+-------+
+例子2：
+
++-------------+---------------+-------------+---------+-------+
+| OBJECT_TYPE | OBJECT_SCHEMA | OBJECT_NAME | ENABLED | TIMED |
++-------------+---------------+-------------+---------+-------+
+| TABLE       | db1           | t1          | YES     | YES   |
+| TABLE       | db1           | t2          | NO      | NO    |
+| TABLE       | db2           | %           | YES     | YES   |
+| TABLE       | db3           | %           | NO      | NO    |
+| TABLE       | %             | %           | YES     | YES   |
++-------------+---------------+-------------+---------+-------+
+22.2.3.3.3 Pre-Filtering by Thread
+略。。。
+
+22.2.3.3.4 Pre-Filtering by Consumer
+配置修改，立刻生效
+
+关于setup_consumer 的几个基本原则：
+
+和consumer相关的destination 不会接收任何event，除非对于的consumer都开启了
+consumer只有等待他所依赖的consumer都enable，才会被check。
+如果一个consumer没有被checked通过，或者check了，但是被disable了，那么依赖它的那些consumer不会被check.
+如果一个event没有对应的destination（没有对应的consumer），那么会被自动disable.
+以下列出consumer的等级关系图：
+
+global_instrumentation                              --1 level
+     thread_instrumentation                           --2 level
+           events_waits_current                          --3 level
+             events_waits_history                        --4 level
+             events_waits_history_long                  --4 level
+           events_stages_current                          --3 level
+             events_stages_history                       --4 level
+             events_stages_history_long                  --4 level
+           events_statements_current                     --3 level
+             events_statements_history                  --4 level
+            events_statements_history_long               --4 level
+     statements_digest                               --2 level
+22.2.3.3.5 Example Consumer Configurations
+略。。。
+
+22.3 Performance Schema Queries
+也就是post-filtering，只不过多了where 从句
+
+22.4 Performance Schema Instrument命名规则
+名字基本都由‘/’分割，从左到右基本都是从普通粒度到精细粒度。
+
+最上层的instrument 组件
+
+idle
+stage
+statement
+wait
+idle instrument 组件
+idle event描述来自：socket_instances.STATE 列： Section 22.9.3.5, “The socket_instances Table”.
+
+stage instrument 组件
+组成形式： stage/code_area/stage_name ， code_area 一般是sql or myisam。
+stage name 一般来自： SHOW PROCESSLIST，如：Sorting result ，Sending data
+
+Statement instrument 组件
+
+statement/abstract/* ： 一般都是早期的stage，在抽象sql都还没来得及解析的时候。
+statement/com: SQL 命令操作 如：statement/com/Connect
+statement/sql： SQL语句操作 如：statement/sql/create_db
+Wait Instrument组件
+
+wait/io ： IO 等待事件
+
+wait/io/file ： 文件IO等待事件。等待文件操作完成的时间如：fwrite（）。
+但是物理IO有可能因为缓存的原因调用fwrite时不会写磁盘。
+wait/io/socket： socket相关的IO等待
+wait/io/table ： 表相关的IO等待。一般对于记录rows来说有fetch，insert，update，delete四种操作。
+不像其他等待事件，table I/O 还包含了其他的等待事件。比如：table io可能包含了文件IO和内存IO。因为读取table rows的时候，有可能会去从文件读取数据。
+* wait/lock
+
+    * wait/lock/table ： 表操作的锁等待事件
+
+* wait/synch
+
+    * wait/synch/cond ：condition就是线程与线程之间的信号。
+
+    * wait/synch/mutex ： mutex主要用来锁住一块共享资源。
+
+    * wait/synch/rwlock ： 读写锁
+22.5 performance schema 状态监控
+SHOW STATUS LIKE 'perf%'
+mysql> SHOW STATUS LIKE 'perf%';
++-----------------------------------------------+-------+
+| Variable_name                                 | Value |
++-----------------------------------------------+-------+
+| Performance_schema_accounts_lost              | 0     |
+| Performance_schema_cond_classes_lost          | 0     |
+| Performance_schema_cond_instances_lost        | 0     |
+| Performance_schema_digest_lost                | 0     |
+| Performance_schema_file_classes_lost          | 0     |
+| Performance_schema_file_handles_lost          | 0     |
+| Performance_schema_file_instances_lost        | 0     |
+| Performance_schema_hosts_lost                 | 0     |
+| Performance_schema_locker_lost                | 0     |
+| Performance_schema_mutex_classes_lost         | 0     |
+| Performance_schema_mutex_instances_lost       | 0     |
+| Performance_schema_rwlock_classes_lost        | 0     |
+| Performance_schema_rwlock_instances_lost      | 0     |
+| Performance_schema_session_connect_attrs_lost | 0     |
+| Performance_schema_socket_classes_lost        | 0     |
+| Performance_schema_socket_instances_lost      | 0     |
+| Performance_schema_stage_classes_lost         | 0     |
+| Performance_schema_statement_classes_lost     | 0     |
+| Performance_schema_table_handles_lost         | 0     |
+| Performance_schema_table_instances_lost       | 0     |
+| Performance_schema_thread_classes_lost        | 0     |
+| Performance_schema_thread_instances_lost      | 0     |
+| Performance_schema_users_lost                 | 0     |
++-----------------------------------------------+-------+
+这些状态表明了由于内存限制，有哪些instrument不能被load或者create。
+
+SHOW ENGINE PERFORMANCE_SCHEMA STATUS
+mysql> SHOW ENGINE PERFORMANCE_SCHEMA STATUS\G
+...
+*************************** 3. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.row_size
+Status: 76
+*************************** 4. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.row_count
+Status: 10000
+*************************** 5. row ***************************
+  Type: performance_schema
+  Name: events_waits_history.memory
+Status: 760000
+...
+*************************** 57. row ***************************
+  Type: performance_schema
+  Name: performance_schema.memory
+Status: 26459600
+...
+这个可以查看status的最大值（.size），以及当前以及达到多少量了（.count）
+
+如：
+
+| performance_schema | (table_share_hash).count | 12391     |
+| performance_schema | (table_share_hash).size  | 12500     |
+使用心得： 当(table_share_hash).count=(table_share_hash).size，那么就会增加Performance_schema_table_instances_lost的值。这样新的表监控就不会被collect。这时候
+可以drop 掉一些不用的表，那么(table_share_hash).count 就会下降。
+
+22.8 Performance Schema General Table Characteristics
+基本表只允许truncate，select，其他操作都不允许。

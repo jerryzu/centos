@@ -1,0 +1,171 @@
+centos7.3+ mysql5.6 + mysqludf安装
+相关连接：
+http://blog.csdn.net/jssg_tzw/article/details/73235232
+https://github.com/mysqludf
+1.下载lib_mysqludf_sys
+https://github.com/mysqludf/lib_mysqludf_sys
+下载mysql-libs,mysql-connector,MySQL-devel
+mysql-libs-5.1.73-5.el6_6.x86_64
+mysql-connector-odbc-5.1.5r1144-7.el6.x86_64
+MySQL-devel-5.6.37-1.el7.x86_64
+一般只需要MySQL-devel就行
+3.编译mysqludf
+a. 解压：unzip lib_mysqludf_sys-master.zip
+
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# ll -rwxr-xr-x 1 root root 1544 Sep 7 10:47 install.sh
+-rw-r--r-- 1 root root 7715 Sep 7 10:47 lib_mysqludf_sys.c
+-rw-r--r-- 1 root root 9934 Sep 7 10:47 lib_mysqludf_sys.html
+-rwxr-xr-x 1 mysql mysql 10714 Sep  7 10:48 lib_mysqludf_sys.so
+-rw-r--r-- 1 root root 1647 Sep  7 10:47 lib_mysqludf_sys.sql
+-rw-r--r-- 1 root root 122 Sep  7 10:47 Makefile
+1
+2
+3
+4
+5
+6
+b. 运行：
+
+gcc -DMYSQL_DYNAMIC_PLUGIN -fPIC -Wall -I /usr/include/mysql -I. -shared lib_mysqludf_sys.c -o lib_mysqludf_sys.so
+报如下错误：
+lib_mysqludf_sys.c:40:23: fatal error: my_global.h: No such file or directory  #include <my_global.h>
+1
+2
+3
+解决方法：
+
+安装 MySQL-devel-5.6.37-1.el7.x86_64.rpm   就可以
+运行  gcc -DMYSQL_DYNAMIC_PLUGIN -fPIC -Wall -I /usr/include/mysql -I. -shared lib_mysqludf_sys.c -o lib_mysqludf_sys.so
+1
+2
+没有报错。
+
+注意：
+运行install.sh 会报如下错误，其实这个脚本不需要运行
+
+Compiling the MySQL UDF
+   gcc -Wall -I/usr/include/mysql -I. -shared lib_mysqludf_sys.c -o /usr/lib/lib_mysqludf_sys.so
+   lib_mysqludf_sys.c:40:23: fatal error: my_global.h: No such file or directory
+    #include <my_global.h>
+                          ^
+   compilation terminated.
+   make: *** [install] Error 1
+   ERROR: You need libmysqlclient development software installed
+   to be able to compile this UDF, on Debian/Ubuntu just run:
+   apt-get install libmysqlclient15-dev
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+尝试很多方法都 没法通过。其实根本就不需要运行install.sh 。可能是bugs原因，只需要运行
+
+  gcc -DMYSQL_DYNAMIC_PLUGIN -fPIC -Wall -I /usr/include/mysql -I. -shared lib_mysqludf_sys.c -o lib_mysqludf_sys.so
+1
+就可以了。
+
+配置
+a.将生成的lib_mysqludf_sys.so 复制到plugin_dir ,并授mysql权限
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# ll
+-rwxr-xr-x 1 root  root   1544 Sep  7 10:47 install.sh
+-rw-r--r-- 1 root  root   7715 Sep  7 10:47 lib_mysqludf_sys.c
+-rw-r--r-- 1 root  root   9934 Sep  7 10:47 lib_mysqludf_sys.html
+-rwxr-xr-x 1 mysql mysql 10714 Sep  7 10:49 lib_mysqludf_sys.so
+-rw-r--r-- 1 root  root   1647 Sep  7 10:47 lib_mysqludf_sys.sql
+-rw-r--r-- 1 root  root    122 Sep  7 10:47 Makefile
+
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# chown mysql.mysql lib_mysqludf_sys.so
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# cp -p lib_mysqludf_sys.so  /data/mysql/lib/plugin/
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# ll /data/mysql/lib/plugin/lib_mysqludf_sys.so
+-rwxr-xr-x 1 mysql mysql 10714 Sep  7 10:48 /data/mysql/lib/plugin/lib_mysqludf_sys.so
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+b.运行lib_mysqludf_sys.sql文件
+
+root@tmsjzt1:/opt/lib_mysqludf_sys-master# mysql -uroot -proot1234
+   Warning: Using a password on the command line interface can be insecure.
+   Welcome to the MySQL monitor.  Commands end with ; or \g.
+   Your MySQL connection id is 642952
+   Server version: 5.6.34-log Source distribution
+   Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+   Oracle is a registered trademark of Oracle Corporation and/or its
+   affiliates. Other names may be trademarks of their respective
+   owners.
+   Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+   (root@localhost:mysql.sock)[(none)]source /opt/lib_mysqludf_sys-master/lib_mysqludf_sys.sql
+   Query OK, 0 rows affected, 1 warning (0.02 sec)
+   Query OK, 0 rows affected, 1 warning (0.00 sec)
+   Query OK, 0 rows affected, 1 warning (0.00 sec)
+   Query OK, 0 rows affected, 1 warning (0.00 sec)
+   Query OK, 0 rows affected, 1 warning (0.00 sec)
+   Query OK, 0 rows affected (0.02 sec)
+   Query OK, 0 rows affected (0.00 sec)
+   Query OK, 0 rows affected (0.00 sec)
+   Query OK, 0 rows affected (0.00 sec)
+   Query OK, 0 rows affected (0.00 sec)
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+5.设置trigger 调用系统脚本
+
+CREATE DEFINER=`fmn`@`%` TRIGGER `fmn`.`test_BEFORE_UPDATE` BEFORE UPDATE ON `test` FOR EACH ROW
+BEGIN
+      DECLARE ret INT;
+       Select sys_exec(concat('echo ',new.a,' ',new.b,' >> /tmp/xx.log'))  INTO ret;
+END
+1
+2
+3
+4
+5
+对test做操作：
+
+use fmn ;
+select * from test ;
+insert into test select 1,2 ;
+update test set a = 10  limit 2 ;
+1
+2
+3
+4
+查看系统文件记录：
+
+root@fmnser:/tmp# cat /tmp/xx.log
+  10 2
+  10 2
+————————————————
+版权声明：本文为CSDN博主「treemini0」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/u010719917/article/details/78129755

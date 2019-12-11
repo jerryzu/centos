@@ -1,0 +1,19 @@
+select l.*
+from t_task m
+        left join t_task_relation l
+                on m.task_id = l.task_id
+where m.task_type = 1
+and m.task_id in( 1951,1943,1941,1380 )
+
+select task_id, m.*
+from json_ctrl  m
+where writer_tablename in ('edw_web_ply_base','edw_web_ply_ci','ods_cthx_web_ply_insured','ods_cthx_web_ply_applicant','ods_cthx_web_ply_ent_tgt')
+
+select *
+from t_task m
+where m.task_type = 1
+and
+( `path` like '%edw_web_ply_base.sql'
+or 
+ `path` like '%edw_web_ply_ci.sql'
+)

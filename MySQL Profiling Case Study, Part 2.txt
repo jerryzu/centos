@@ -1,0 +1,862 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>MySQL Profiling Case Study, Part 2</title>
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.xaprb.com/index.xml">
+		<link rel="canonical" href="https://www.xaprb.com/blog/2006/10/17/mysql-profiling-case-study-part-2/">
+		
+		<link rel="shortcut icon" type="image/png" href="https://www.xaprb.com/apple-touch-icon-precomposed.png">
+		
+		
+		<meta name="generator" content="Hugo 0.47.1" />
+
+		
+		<meta property="og:title" content="MySQL Profiling Case Study, Part 2" />
+		<meta property="og:type" content="article" />
+		<meta property="og:image" content="https://www.xaprb.com/img/default-header-img.jpg" />
+		<meta property="og:description" content="" />
+		<meta property="og:url" content="https://www.xaprb.com/blog/2006/10/17/mysql-profiling-case-study-part-2/" />
+		<meta property="og:site_name" content="MySQL Profiling Case Study, Part 2" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:site" content="@xaprb" />
+
+
+		
+		<link rel="stylesheet" href="https://www.xaprb.com/css/tachyons.min.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/story.css" />
+		<link rel="stylesheet" href="https://www.xaprb.com/css/descartes.css" />
+		
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+		<link href="https://fonts.googleapis.com/css?family=Quattrocento+Sans:400,400i,700,700i|Quattrocento:400,700|Spectral:400,400i,700,700i&amp;subset=latin-ext" rel="stylesheet">
+		
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.css" integrity="sha384-TEMocfGvRuD1rIAacqrknm5BQZ7W7uWitoih+jMNFXQIbNl16bO8OZmylH/Vi/Ei" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.js" integrity="sha384-jmxIlussZWB7qCuB+PgKG1uLjjxbVVIayPJwi6cG6Zb4YKq0JIw+OMnkkEC7kYCq" crossorigin="anonymous"></script>
+		<script src="https://www.xaprb.com/js/auto-render.min.js"></script> 
+		<script src="https://www.xaprb.com/js/story.js"></script>
+
+	</head>
+	<body class="ma0 bg-white section-blog page-kind-page is-page-true  feature-math feature-figcaption feature-tablecaption feature-figcaption-hidden feature-3dbook-covers feature-hyphenate feature-justify feature-highlight feature-hrfleuron feature-qrcode feature-tweetquote feature-depth">
+		
+		<header class="cover bg-top" style="background-image: url('https://www.xaprb.com/img/default-header-img.jpg'); background-position: center;">
+			<div class="bg-black-30 bb bt">
+
+				<nav class="hide-print sans-serif  border-box pa3 ph5-l">
+					<a href="https://www.xaprb.com/" title="Home">
+						<img src="https://www.xaprb.com/img/logo.jpg" class="w2 h2 br-100" alt="Baron Schwartz&#39;s Website" />
+					</a>
+					<div class="fr h2 pv2 tr">
+						<a class="link f5 ml2 dim near-white" href="/archives/">Archives</a>
+						<a class="link f5 ml2 dim near-white" href="/talks/">Talks</a>
+						<a class="link f5 ml2 dim near-white" href="https://github.com/xaprb"><i class="fab fa-github-square"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://linkedin.com/in/xaprb"><i class="fab fa-linkedin"></i></a>
+						<a class="link f5 ml2 dim near-white" href="https://twitter.com/xaprb"><i class="fab fa-twitter-square"></i></a>
+						<a class="link f5 ml2 dim near-white fas fa-rss-square" href="https://www.xaprb.com/index.xml" title="RSS Feed"></a>
+						<a class="link f5 ml2 dim near-white fas fa-search" href="https://www.xaprb.com/search/" role="search" title="Search"></a>
+					</div>
+				</nav>
+
+				<div id="hdr" class="tc-l pv4-ns pv5-l pv2 ph3 ph4-ns">
+					<h1 class="near-white mt1-ns f2 fw3 mb0 mt0 lh-title">MySQL Profiling Case Study, Part 2</h1>
+					<h2 class="near-white mt3-l mb4-l fw1 f6 f3-l measure-wide-l center lh-copy mt2 mb3">
+						
+						
+							
+								Published
+								<time datetime="2006-10-17T00:00:00Z">Oct 17, 2006</time>
+								<span class="display-print">by Baron Schwartz</span>
+								 in <a href="https://www.xaprb.com/categories/databases" class="no-underline category near-white dim">Databases</a>
+								<span class="display-print">at https://www.xaprb.com/blog/2006/10/17/mysql-profiling-case-study-part-2/</span>
+							
+						
+					</h2>
+				</div>
+
+				
+				
+				
+				
+
+			</div>
+		</header>
+		
+		<main role="main">
+		
+<article class="center bg-white br-3 pv1 ph4 lh-copy f5 nested-links mw7">
+	
+
+<p>This is the third in a series of articles on profiling queries in MySQL (the second of two demonstrations of profiling techniques, but the third article overall). In this article I&rsquo;ll present the same example as in the <a href="/blog/2006/10/15/a-case-study-in-profiling-queries-in-mysql/">second article</a>, but use a different approach to show details I didn&rsquo;t include.</p>
+
+<blockquote>
+<p>Note: I wrote this article in 2006, when I didn&rsquo;t have a clear understanding
+of even simple concepts such as <em>what performance really is</em>. Since then I
+have learned a lot from wise people such as Cary Millsap. In 2012 I founded
+<a href="https://vividcortex.com/">VividCortex, the best database performance optimization and database monitoring platform</a>
+to chase away the kind of ignorance I display in the article below. Enjoy this
+trip down memory lane.</p>
+</blockquote>
+
+<p>An astute reader&rsquo;s comment reinforced my vague unease at my second article. In hindsight, I see I got distracted trying to choose an interesting example that&rsquo;s not too hard to present in one article, yet has enough depth to usefully demonstrate the technique. It&rsquo;s harder than I thought it would be. In real life I&rsquo;ve learned from dozens of cases, and cramming everything into one example is probably not possible. In any case, I&rsquo;m going to approach the same query from a different angle in this article, so you get a more complete picture.</p>
+
+<h3 id="method-and-results">Method and results</h3>
+
+<p>For the tests in this article, I restarted MySQL, then ran the query twice against the first table. The first run was &lsquo;cold&rsquo;&mdash;no data or indexes had been read into memory yet. The second was &lsquo;warm&rsquo; and should perform just as it did the last time I profiled. I measured both runs and found what I expected. So far, so good.</p>
+
+<p>Then something really surprising happened. I had dropped the tables I used in the second article, and re-created them the same way for this article, but the queries against the redesigned table (clustered date-first, to optimize queries on a date range) performed almost identically to the queries against the table with a surrogate key. What happened?</p>
+
+<p>I&rsquo;m not sure, actually. For some reason, MySQL&rsquo;s optimizer decided to use the <code>client</code> index, which is the same strategy as it used on the initial table design&mdash;in fact, the query plan was identical. I double-checked all the data and table structures to be sure, re-analyzed the table, and tried again; no dice. It still wanted to use a sub-optimal query plan! In the end, I rewrote the query with <code>FORCE INDEX</code> to make it use the primary key instead of the <code>client</code> index, and got good performance as I expected. If anyone has insight as to why this non-repeatable result happened, please let me know.</p>
+
+<p>Here are all three sets of numbers. The three sets are the query against the initial table design, the redesigned table, and the redesigned table with <code>FORCE INDEX</code>. As I said, I ran each query twice: once cold, once warm.</p>
+
+<table class="borders collapsed compact">
+  <caption>Query Performance</caption> <tr>
+    <th scope="col" rowspan="2">
+      Variable_name
+    </th>
+
+    <th scope="col" colspan="2">
+      Before Redesign
+    </th>
+
+    <th scope="col" colspan="2">
+      After Redesign
+    </th>
+
+    <th scope="col" colspan="2">
+      Redesign, `FORCE INDEX`
+    </th>
+  </tr>
+
+  <tr>
+    <th scope="col">
+      Cold
+    </th>
+
+    <th scope="col">
+      Warm
+    </th>
+
+    <th scope="col">
+      Cold
+    </th>
+
+    <th scope="col">
+      Warm
+    </th>
+
+    <th scope="col">
+      Cold
+    </th>
+
+    <th scope="col">
+      Warm
+    </th>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Com_select
+    </th>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Created_tmp_tables
+    </th>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_read_key
+    </th>
+
+    <td>
+      1522
+    </td>
+
+    <td>
+      1522
+    </td>
+
+    <td>
+      1522
+    </td>
+
+    <td>
+      1522
+    </td>
+
+    <td>
+      2
+    </td>
+
+    <td>
+      2
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_read_next
+    </th>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_read_rnd
+    </th>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31000
+    </td>
+
+    <td>
+      31000
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_read_rnd_next
+    </th>
+
+    <td>
+      32
+    </td>
+
+    <td>
+      32
+    </td>
+
+    <td>
+      32
+    </td>
+
+    <td>
+      32
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_update
+    </th>
+
+    <td>
+      1488
+    </td>
+
+    <td>
+      1488
+    </td>
+
+    <td>
+      1488
+    </td>
+
+    <td>
+      1488
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Handler_write
+    </th>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_buffer_pool_read_ahead_rnd
+    </th>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      2
+    </td>
+
+    <td>
+      2
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_buffer_pool_read_ahead_seq
+    </th>
+
+    <td>
+      168
+    </td>
+
+    <td>
+      168
+    </td>
+
+    <td>
+      151
+    </td>
+
+    <td>
+      151
+    </td>
+
+    <td>
+      4
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_buffer_pool_read_requests
+    </th>
+
+    <td>
+      204739
+    </td>
+
+    <td>
+      204733
+    </td>
+
+    <td>
+      204522
+    </td>
+
+    <td>
+      204361
+    </td>
+
+    <td>
+      4117
+    </td>
+
+    <td>
+      3963
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_buffer_pool_reads
+    </th>
+
+    <td>
+      88
+    </td>
+
+    <td>
+      91
+    </td>
+
+    <td>
+      138
+    </td>
+
+    <td>
+      100
+    </td>
+
+    <td>
+      10
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_data_read
+    </th>
+
+    <td>
+      45629440
+    </td>
+
+    <td>
+      45678592
+    </td>
+
+    <td>
+      42106880
+    </td>
+
+    <td>
+      41517056
+    </td>
+
+    <td>
+      1343488
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_data_reads
+    </th>
+
+    <td>
+      257
+    </td>
+
+    <td>
+      260
+    </td>
+
+    <td>
+      295
+    </td>
+
+    <td>
+      255
+    </td>
+
+    <td>
+      16
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_pages_read
+    </th>
+
+    <td>
+      2785
+    </td>
+
+    <td>
+      2788
+    </td>
+
+    <td>
+      2570
+    </td>
+
+    <td>
+      2534
+    </td>
+
+    <td>
+      82
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Innodb_rows_read
+    </th>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      49881
+    </td>
+
+    <td>
+      31001
+    </td>
+
+    <td>
+      31001
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Select_range
+    </th>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Sort_rows
+    </th>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+      31
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Sort_scan
+    </th>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+    </td>
+
+    <td>
+    </td>
+  </tr>
+
+  <tr>
+    <th scope="row">
+      Table_locks_immediate
+    </th>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+
+    <td>
+      1
+    </td>
+  </tr>
+</table>
+
+<h3 id="analysis">Analysis</h3>
+
+<p>You can see the queries that use the <code>client</code> index perform almost identically to each other. They use the same query plan, build the same temporary table, and so on. The main difference is there&rsquo;s a different amount of data in the table and indexes after the redesign:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th align="right">Before Redesign</th>
+<th align="right">After Redesign</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Data Size</td>
+<td align="right">45678592</td>
+<td align="right">40452096</td>
+</tr>
+
+<tr>
+<td>Index Size</td>
+<td align="right">53067776</td>
+<td align="right">39944192</td>
+</tr>
+</tbody>
+</table>
+
+<p>Using the surrogate key is less space-efficient in this case, so the redesigned table is smaller. However, each index is smaller in the table with the surrogate key, because the primary key is not as wide. If I had to guess, I wouldn&rsquo;t know whether this would result in more or less data being read, which is why I don&rsquo;t guess, I measure. It turns out InnoDB reads the same number of rows, but they fit in fewer pages after re-indexing, so it reads a couple hundred fewer pages. Still, either of the queries using the <code>client</code> index reads about 40 MiB of data, whether it&rsquo;s run cold or warm.</p>
+
+<p>The query that scans a range of the primary key reads 1.28 MiB cold, and zero when it&rsquo;s warm&mdash;82 page reads instead of thousands. It also makes many fewer requests to the buffer pool. And yet, it reads about 60% the number of rows. It&rsquo;s just that these rows are contiguous within the table, and therefore much more efficient to read. It only makes two index reads, which is great. I assume these two are to find the beginning of the date range in the primary key. After that it just scans every row till it finds the end, which is why <code>Handler_read_rnd</code> is high&mdash;31,000 in fact, which is the number of rows in the date range:</p>
+
+<pre><code class="language-sql">select count(*) from tracking
+where day between '2007-01-01' and '2007-01-31';
+
++----------+
+| count(*) |
++----------+
+|    31000 |
++----------+
+</code></pre>
+
+<p>This is one less than the number of rows InnoDB reports reading. I believe this is because InnoDB read an extra row, the one past the end of the date range, to determine where to stop scanning.</p>
+
+<p>Finally, here are the <code>Last_query_cost</code> variables again. As before, the query optimizer thinks the clustered index scan is more expensive, but it&rsquo;s wrong.</p>
+
+<table>
+<thead>
+<tr>
+<th align="right">Before Redesign</th>
+<th align="right">After Redesign</th>
+<th align="right">Redesign, <code>FORCE INDEX</code></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="right">21247.5</td>
+<td align="right">10526.9</td>
+<td align="right">86457.133551</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>This article measured the differences between running the query cold, and running it with the server warmed up and the data already in memory. I think this actually accentuates the second table design&rsquo;s improved query performance, because even when it needs to read data and indexes from the disk, it doesn&rsquo;t have to read as much data. I think I&rsquo;ve explored the full depth of this example now.</p>
+
+<p>Thanks for the feedback, and keep those comments coming! I&rsquo;m by no means the expert on all this, so I hope you&rsquo;ll teach me what you know. I&rsquo;m still putting the finishing touches on a tool to profile queries easily, and will post an article on that shortly.</p>
+
+</article>
+
+		</main>
+		
+				<div class="hide-print sans-serif f6 f5-l mt5 ph3 pb6 center nested-copy-line-height lh-copy nested-links mw-100 measure-wide">
+		<div class="about-the-author">
+		
+			
+			
+				
+					<p><a href="/about/"><img src="https://d33wubrfki0l68.cloudfront.net/843019e4d498ed7c38871b8f93da3ccfc0f91632/7e911/baron-square.jpg" alt="Baron Schwartz" /></a></p>
+
+<p>I&rsquo;m the founder and CTO of <a href="https://vividcortex.com">VividCortex</a>, author of
+several books, and creator of various open-source software. I write about topics such as technology, entrepreneurship, and fitness, and I tweet at <a href="https://twitter.com/xaprb">@xaprb</a>. <a href="/about/">More about me</a>.</p>
+
+				
+			
+		
+		</div>
+		
+		<div class="subscribe-form cb w-100 pt3">
+			<form action="//xaprb.us19.list-manage.com/subscribe?u=6ee277790a99c26a414c9693f&amp;id=703c46c578" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" target="_blank" novalidate>
+				<input class="w-50 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l mr2" type="email" placeholder="Subscribe for email updates!" name="EMAIL" id="mce-EMAIL">
+				<input class="w-40 dib ph3 pv2 ba b--silver br2 sans-serif f6 f5-l white bg-mid-gray" type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe">
+			</form>
+		</div>
+		
+	</div>
+
+		
+		
+		
+		<footer class="hide-print sans-serif f6 fw1 bg-black near-white bottom-0 w-100 pa3" role="contentinfo">
+			<p class="w-50 fr tr">
+			<a class="no-underline near-white" href="https://github.com/xaprb/story"><img class="dib" title="Made with Hugo and Story" alt="Story logo" src="https://www.xaprb.com/img/story-logo-white.svg" style="width: 1.5rem; height: 1.5rem" /></a>
+			</p>
+			<p class="w-50 near-white">
+				&copy; 2019 Baron Schwartz
+			</p>
+		</footer>
+		
+	
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-101883-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+	
+	</body>
+</html>

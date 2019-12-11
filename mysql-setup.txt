@@ -1,0 +1,184 @@
+1> 关闭防火墙和selinux
+
+关闭防火墙
+
+service iptables stop
+
+chkconfig --level 345 iptables off
+
+关闭selinux
+
+setenforce 0
+
+cat /etc/SELINUX/config | grep selinux=
+
+查看结果是否为selinux=disabled
+
+
+
+2>创建MySQL用户
+
+groupadd -g 54330 mysql
+
+useradd -u 54330 -g mysql mysql
+
+
+
+cd /u01/mysql
+
+wget https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-5.7.21-linux-glibc2.12-x86_64.tar.gz
+
+tar -xzvf mysql-5.7.21-linux-glibc2.12-x86_64.tar.gz
+
+mv mysql-5.7.21-linux-glibc2.12-x86_64 mysql57
+
+mkdir mysqldata
+
+chown -R mysql:mysql /u01/mysql/
+
+
+
+修改root，mysql等用户环境变量
+
+root用户在/root下 .bash_profile
+
+mysql用户在/home/mysql下
+
+PATH=$PATH:/u01/mysql/mysql57/bin
+
+export PATH
+
+
+
+3>修改系统参数
+
+root用户修改参数
+
+vi /etc/security/limits.conf    
+
+mysql   soft    nproc   16384
+
+mysql   hard    nproc   16384
+
+mysql   soft    nofile  65536
+
+mysql   hard    nofile  65536
+
+mysql   soft    stack   1024000
+
+mysql   hard    stack   1024000
+
+
+
+切换到mysql用户
+
+su - mysql
+
+mkdir -p /u01/mysql/mysqldata/3306
+
+mkdir -p /u01/mysql/mysqldata/3306/mybinlog
+
+mkdir -p /u01/mysql/mysqldata/3306/mydata_1
+
+mkdir -p /u01/mysql/mysqldata/3306/mytmp
+
+mkdir -p /u01/mysql/mysqldata/3306/mylog
+
+
+su - root
+
+chmod +x /u01/mysql/mysql57/bin/mysqld
+
+
+
+4> 初始化
+
+/u01/mysql/mysql57/bin/mysqld --initialize --user=mysql --basedir=/u01/mysql/mysql57 --datadir=/u01/mysql/mysqldata/3306/mydata --innodb-undo-tablespaces=4
+
+记下密码，后面登陆使用
+
+
+
+数据加密
+
+/u01/mysql/mysql57/bin/mysql_ssl_rsa_setup --datadir=/u01/mysql/mysqldata/3306/mydata
+
+
+
+先root用户赋予权限  chown mysql:mysql /etc/my.cnf
+
+登录mysql
+
+配置/etc/my.cnf     
+
+[client] 
+
+default-character-set = utf8
+
+
+
+[mysql]
+
+prompt = [\\u@\\h][\\d]>
+
+
+
+[mysqld]
+
+basedir = /u01/mysql/mysql57
+
+datadir = /u01/mysql/mysqldata/3306/mydata
+
+port=3306
+
+socket = /u01/mysql/mysqldata/3306/mytmp/mysqld.sock
+
+pid_file = /u01/mysql/mysqldata/3306/mysqld.pid
+
+tmpdir = /u01/mysql/mysqldata/3306/mytmp/
+
+slave_load_tmpdir = /u01/mysql/mysqldata/3306/mytmp/
+
+log_error = /u01/mysql/mysqldata/3306/mylog/mysqld.log
+
+log_bin = /u01/mysql/mysqldata/3306/mybinlog/bin
+
+relay_log = /u01/mysql/mysqldata/3306/mybinlog/relay.log
+
+server-id=1
+
+user=mysql
+
+log-slave-updates
+
+log-error=mysql1
+
+report-host=localhost
+
+report-port=3311
+
+relay-log-recovery=1
+
+master-info-repository=TABLE
+
+relay-log-info-repository=TABLE
+
+gtid-mode=ON
+
+enforce-gtid-consistency=1
+
+
+
+5> mysql用户下拉起服务
+
+mysqld_safe --defaults-file=/u01/mysql/mysqldata/3306/my.cnf &
+
+alter user 'root'@'localhost' identified by '123456';
+
+
+
+起停
+
+mysqld_safe --defaults-file=/u01/mysql/mysqldata/3306/my.cnf &
+
+mysqladmin -uroot -p shutdown
