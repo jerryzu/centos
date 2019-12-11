@@ -117,13 +117,3 @@ ls -l | grep 20191206 | awk '{printf "%s ", $9}' |  xargs rm
 linux-awk中NF与$NF的区别
 NF 表示的是浏览记录的域的个数
 $NF 表示的最后一个Field（列），即输出最后一个字段的内容
-
-#!/bin/bash
-wget -c http://video.yahboom.top/video/4337dc46-16c1df8d08d-0004-0e5b-97f-a2a0f.mp4
-
-i=1
-while [ $i -le 93 ]
-do
-  wget -c http://www.yahboom.com/Omnibit/images/newsimg/${i}-min.jpg
-  let i++
-done
