@@ -1,3 +1,31 @@
+svn status
+
+查看文件的修改历史
+[cognos@DEV-COGNOSSRV edw]$ svn blame 08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql
+
+
+[cognos@DEV-COGNOSSRV edw]$ svn commit -m"目标表cdm_ply_plyedr_dd增加:c_inwd_mrk等四个字段"
+Sending        07pm/30-发布/2019-12-13_tpedw/cdm_ply_plyedr_dd-ddl.sql
+Sending        07pm/30-发布/2019-12-13_tpedw/cdm_ply_plyedr_dd.sql
+Sending        07pm/30-发布/2019-12-13_tpedw/readme.txt
+Sending        08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql
+Transmitting file data ....
+Committed revision 164.
+
+[cognos@DEV-COGNOSSRV edw]$ svn commit -m"目标表cdm_ply_plyedr_dd增加:c_inwd_mrk等四个字段"
+svn: Commit failed (details follow):
+svn: '/alidata/workspace/edw/08src/02-WEB/tp.tar.gz' is scheduled for addition, but is missing
+[cognos@DEV-COGNOSSRV edw]$ svn revert 08src/02-WEB/tp.tar.gz
+
+
+
+1.svn add 命令 递归目录下所有文件
+svn add . --no-ignore --force
+
+2.通过SVN命令提交未在版本控制中的文件和文件夹
+svn add * --force
+
+
 yum install subversion
 mkdir /opt/svn
 svnadmin create /opt/svn/edw

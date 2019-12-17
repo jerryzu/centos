@@ -1,0 +1,172 @@
+    我们考虑使用innodb_file_per_table 方式建立的INNODB表每个表都有一个相应的数据文件idb，格式文件frm
+但是某些数据还是存储在共享表空间。如果我们的线程要访问这个表的数据必须要首先打开这些文件然后通过
+pread()/read() lseek()等系统调用进行文件位置寻找和读取。那么我们打开文件的系统调用应该是open()系统调用。
+     当然这些必要要有一个LINUX系统及编程基础，先说说一个每个进程都包含了PCB(PCB在内核态空间,进程间是共享的)
+PCB是一个进程存在的标识存到了进程运行的相关信息，内核中他实际上是一个结构体，其中包含很多信息如我
+们熟知的PID PPID（大约100多种信息）其中PCB中保存了一份文件描述符，我们很容易在内核代码task_struct
+结构体也就是PCB的信息中找到如下：
+/* open file information */
+        struct files_struct *files;
+其对应了内核中的file结构体，可以看到进程有一个files_struct结构体用于保存，我们可以简单认为进程进行进程保存
+了一份打开所有文件的文件描述符，这个文件描述符从0开始向后计数，每个计数表示打开的一个文件。如果一个进程要
+打开一个文件我们LINUX是使用的open()系统调用，这个函数成功放回的就是打开的文件描述符，失败则设置返回值为-1
+同时给出perror，看看LINUX中对这个函数的解释
+open() and creat() return the new file descriptor, or -1 if an error occurred (in which case, errno 
+is set appropriately).
+      
+     那么MYSQL既然是一个进程多个线程，那么肯定也逃不掉这样的LINUX安排，那么MYSQL既然要打开表，那么底层的
+调用必然是OPEN函数，既然文件有打开就有关闭，当进行LINUX系统编程或者C语言编程的时候，我们通常在使用完文件后
+使用CLOSE()或者FCLOSE()来关闭文件，这样系统释放打开文件所保留的file信息，防止内存泄露。
+
+
+    那么我们来证明一下使用strace 分别在LINUX进程TRACE LINUX线程信息。
+
+
+
+
+一、关于打开表
+
+
+1、首先关闭重启mysql，避免其他的打开的表的文件描述的干扰。
+[root@hadoop1 kernels]# service mysqldefault restart
+     Shutting down MySQL....                                    [  OK  ]
+     Starting MySQL...                                          [  OK  ]
+2、使用pstree查看mysql所有线程（先找到MYSQL进程ID）
+   mysqld(10735)─┬─{mysqld}(10745)
+              ├─{mysqld}(10746)
+              ...
+              ├─{mysqld}(10773)
+              └─{mysqld}(10774)
+   我们新打开一个MYSQL线程，
+   [root@hadoop1 kernels]# pstree -p 10735
+mysqld(10735)─┬─{mysqld}(10745)
+              ├─{mysqld}(10746)
+              ...
+              ├─{mysqld}(10774)
+              └─{mysqld}(10794)
+   这样我们找到我们新开的会话的线程ID 10794.
+3、对线程10794进行STRACE
+   strace -T -p 10794
+   然后再新的会话打开一个表，我这里打开的是
+   select count(*) from tstr;
+   
+   
+   Process 10794 attached - interrupt to quit
+......
+open("./test/tstr.ibd", O_RDONLY)       = 39 <0.000332>
+getcwd("/mysql/data"..., 4096)          = 12 <0.000118>
+lstat("/mysql/data/test", {st_mode=S_IFDIR|0700, st_size=4096, ...}) = 0 <0.000114>
+lseek(39, 0, SEEK_END)                  = 98304 <0.000109>
+pread(39, "*z\322_\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\313\332\7\342\0\10\0\0\0\0\0\0"..., 16384, 0) = 16384 <0.016728>
+close(39)                               = 0 <0.000243>
+open("./test/tstr.ibd", O_RDWR)         = 39 <0.000015>
+fcntl(39, F_SETLK, {type=F_WRLCK, whence=SEEK_SET, start=0, len=0}) = 0 <0.000015>
+......
+
+
+我们来分析这里的关键步骤
+open("./test/tstr.ibd", O_RDONLY)       = 39 <0.000332> 这里打开表的文件tstr.ibd只读方式，返回文件描述符39
+lseek(39, 0, SEEK_END)                  = 98304 这个是放回当前打开文件的大小，也就是初始的96K，因为我只有一条数据
+pread(39, "*z\322_\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\313\332\7\342\0\10\0\0\0\0\0\0"..., 16384, 0) = 16384 <0.016728>
+这一行开始真正的读取数据 读取了16384个字节。
+close(39)                               = 0 <0.000243> 然后关闭了文件tstr.ibd
+open("./test/tstr.ibd", O_RDWR)         = 39 <0.000015> 然后再次以读写方式方式打开了tstr.ibd 数据文件，返回文件描述符39
+fcntl(39, F_SETLK, {type=F_WRLCK, whence=SEEK_SET, start=0, len=0}) = 0 <0.000015>
+这一行设置了tstr.ibd文件的属性，此函数用于改变文件属性，为一需要写入锁的属性，并且开始字节是0.
+
+
+如果我们发现LINUX 在关闭文件后又一次以写锁方式打开了文件。我们现在来看看我们的线程中是否包含了这个文件描述符
+4、
+
+
+[root@hadoop1 fd]# pwd
+/proc/10794/fd
+[root@hadoop1 fd]# ls -lrt|grep tstr.ibd
+lrwx------ 1 root root 64 Dec  5 06:36 39 -> /mysql/data/test/tstr.ibd
+
+
+
+
+二、关于FLUSH TABLE做了什么操作
+
+
+1、在某些情况FLUSH TABLE 会被堵塞，如 LOCK TABLES ... READ
+   其次我还得到表操作期间文件，比如DML期间(不是事物），表重构期间,SELECT 读取数据很慢
+   一切不允许进程关闭文件描述符的操作。
+   比如alter table add key(DDL） 这个操作需要将索引系统保存到表空间数据文件。
+   比如delete from（DML) 这个操作需要将数据从表空间数据文件删除。
+   比如SELECT 很慢期间 。
+   
+   
+   其等待系统调用futex(0xbb3f35c, FUTEX_WAIT_PRIVATE, 1, {31535999, 999934000}
+   
+   
+2、FLUSH 实际上做的操作为:
+
+
+[root@hadoop1 fd]# strace -T -p 15101
+Process 15101 attached - interrupt to quit
+....
+close(24)                               = 0 <0.000115>
+close(25)                               = 0 <0.000108>
+close(28)                               = 0 <0.000099>
+close(29)                               = 0 <0.000097>
+close(26)                               = 0 <0.000242>
+close(27)                               = 0 <0.000008>
+close(30)                               = 0 <0.000008>
+close(31)                               = 0 <0.000007>
+close(32)                               = 0 <0.000007>
+close(33)                               = 0 <0.000007>
+close(22)                               = 0 <0.000152>
+close(23)                               = 0 <0.000147>
+close(20)                               = 0 <0.000110>
+close(21)                               = 0 <0.000376>
+close(34)                               = 0 <0.000008>
+close(35)                               = 0 <0.000007>
+close(38)                               = 0 <0.000008>
+lseek(37, 0, SEEK_SET)                  = 0 <0.000011>
+write(37, "\376\1\354:\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 35) = 35 <0.000025>
+fsync(37)                               = 0 <0.008020>
+close(37)                               = 0 <0.000071>
+close(39)                               = 0 <0.000061>
+...
+Process 15101 detached
+
+
+我们来观察这些操作全部是关闭文件描述符，但是我发现这里关闭的文件全部为MYISAM的和CSV文件，如下：
+lrwx------ 1 root root 64 Dec  5 08:27 4 -> /mysql/data/test/ibdata1
+lrwx------ 1 root root 64 Dec  5 08:27 39 -> /mysql/data/mysql/general_log.CSV
+lr-x------ 1 root root 64 Dec  5 08:27 38 -> /mysql/data/mysql/general_log.CSV
+lrwx------ 1 root root 64 Dec  5 08:27 37 -> /mysql/data/mysql/general_log.CSM
+lrwx------ 1 root root 64 Dec  5 08:27 36 -> socket:[42669]
+lrwx------ 1 root root 64 Dec  5 08:27 35 -> /mysql/data/mysql/event.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 34 -> /mysql/data/mysql/event.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 33 -> /mysql/data/mysql/servers.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 32 -> /mysql/data/mysql/servers.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 31 -> /mysql/data/mysql/procs_priv.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 30 -> /mysql/data/mysql/procs_priv.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 3 -> /mysql/data/binlog.index
+lrwx------ 1 root root 64 Dec  5 08:27 29 -> /mysql/data/mysql/columns_priv.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 28 -> /mysql/data/mysql/columns_priv.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 27 -> /mysql/data/mysql/tables_priv.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 26 -> /mysql/data/mysql/tables_priv.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 25 -> /mysql/data/mysql/proxies_priv.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 24 -> /mysql/data/mysql/proxies_priv.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 23 -> /mysql/data/mysql/db.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 22 -> /mysql/data/mysql/db.MYI
+lrwx------ 1 root root 64 Dec  5 08:27 21 -> /mysql/data/mysql/user.MYD
+lrwx------ 1 root root 64 Dec  5 08:27 20 -> /mysql/data/mysql/user.MYI
+
+
+同时，会对
+同步的数据进行写到内核缓冲区同时FSYNC此文件然后关闭。
+但是对于INNODB数据文件，未发现关闭文件的情况。
+
+
+那么我们可以视乎的得出2个结论
+
+
+1、flush table 会关闭MYISAM和CSV(对其他存储引擎作用未知)的文件描述符，同时会写脏数据到文件，同时关闭文件描述符，
+   关闭文件。
+2、flush table 在INNODB中不会真正的关闭文件描述符，同时也不会写脏数据，但是FLUSH TABLE确实会由于
+   innodb中对文件操作而造成堵塞，堵塞等待为futex系统调用。所以flush tbale对INNODB可能用处并不大。

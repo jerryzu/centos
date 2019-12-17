@@ -1,3 +1,17 @@
+set profiling=1;
+set profiling_history_size = 100;
+
+/*
+select * from information_schema.profiling where query_id = 6
+*/
+show profiles;
+
+show profile for query 6;
+
+show profile ALL for query 6;
+
+
+
 Status	Sending data
 Duration	360.204197
 CPU_user	430.896494
@@ -137,3 +151,62 @@ sending data表示收集+发送数据，通常产生的情况有一下几种：
 存在大字段或返回数据量过大导致数据传输过慢。
 sql可能没有走索引，扫了大量数据，从大量数据中找这一条记录。
 数据库服务器网络问题。
+
+show global status like 'open_files'; -- 15
+show variables like 'open_files_limit'; 5000
+
+open_files / open_files_limit * 100% <= 75％
+select concat(15 / 5000 * 100, '%')
+
+mysql [(none)]> show global status like 'create%tables';
+| created_tmp_disk_tables | 11    |
+| created_tmp_tables      | 175   |
+
+Created_tmp_disk_tables / Created_tmp_tables * 100% <= 25%比如上面的服务器Created_tmp_disk_tables / Created_tmp_tables * 100% ＝1.20%，应该相当好了
+
+tmp_table_size=200M
+
+show global status like 'sort%'; 
+sort_merge_passes	49 --磁盘多次排序  Sort_buffer_size
+sort_range	2
+sort_rows	345472
+sort_scan	42
+
+mysql> SET GLOBAL sort_buffer_size = 1024*1024;
+
+show global status like 'open%tables%';
+Open_tables	179
+Opened_tables	216
+
+show variables like 'table_open_cache%';
+| table_open_cache           | 2000  |
+| table_open_cache_instances | 16    |
+
+open_tables / opened_tables   * 100% >= 85%
+open_tables / table_cache * 100% <= 95%
+
+select 179 / 216 * 100 --  32.6003 wrong  >= 85%
+select 252 / 2000 * 100 --  12.6000 ok  <= 95%
+
+
+ show full processlist;
+ 
+ show variables like '%max_connections%';
+
+--  Sending data
+show variables like '%buffer_pool_size';
+
+
+show variables like '%query_cache%'
+改配置文件设置 query_cache_type=YES，后发现查询速度依然很慢，所以这个方案失效
+
+show variables like 'innodb_buffer_pool%';
+
+query_cache_size=128M
+query_cache_type=1
+
+set profiling=on;
+
+show profiles
+
+SELECT * FROM INFORMATION_SCHEMA.PROFILING 

@@ -1,0 +1,23 @@
+select table_name, column_name, character_set_name,	collation_name, column_type 
+from information_schema.columns
+where column_name like '%c_app_no%'
+
+show variables like '%event_scheduler%'; 
+-- 可通过如下任何一个命令行
+set global event_scheduler = on; 
+
+--重启生效
+[mysqld]
+event_scheduler = 1
+
+drop table if exists events_list; 
+create table events_list(event_name varchar(20) not null, event_started timestamp not null); 
+
+drop event if exists event_afternoon;
+create event event_afternoon
+on schedule  
+ every 1 day  starts '2019-12-17 14:35:00'
+ on completion preserve enable -- 增加执行完成后不会删除事件
+do insert into events_list values('event_now', now()); 
+
+select * from events_list

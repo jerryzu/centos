@@ -34,3 +34,8 @@ case $input in
                 exit
                 ;;
 esac
+
+## [cognos@DEV-COGNOSSRV edw]$ cd /alidata/workspace/edw
+## [cognos@DEV-COGNOSSRV edw]$ svn add 07pm/30-发布/2019-12-11\ 清单包/
+## [cognos@DEV-COGNOSSRV edw]$ svn add 07pm/30-发布/2019-12-12\ 清单包/
+## [cognos@DEV-COGNOSSRV edw]$ svn commit -m"cdm_ply_policy_dd, tps_web_bas_comm_code.c_cnm web_ply_tgt_obj.c_tgt_obj_txt_fld_4: varchar2(600)"

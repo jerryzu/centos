@@ -1,65 +1,138 @@
-Êı¾İ¿âÔÚÎÒÃÇÈÕ³£¿ª·¢ÖĞ½Ó´¥ÊÇºÜ¶àµÄ£¬Æ½Ê±×Ô¼ºÃ»ÊÂĞ´Ò»Ğ©¶«Î÷Ò²¾­³£»áÓÃµ½£¬Ö®Ç°×¨ÃÅĞ´¹ı°²×°MySQL¡¢Redis¡¢MongoDBµÄÎÄÕÂ£¬¸÷ÖÖ°²×°ÅäÖÃ»¹ÊÇ±È½ÏÂé·³µÄ£¬ÎªÁË¼ÇÏÂ°²×°²½Öè·½±ãºóÆÚÔÙ°²×°¡£ÏÖÔÚ·¢ÏÖÆäÊµdockerÓĞÏÖ³ÉµÄ£¬¼¸ÌõÃüÁî¾ÍÄÜ´î½¨Ò»¸öÊı¾İ¿â³öÀ´£¬·½±ãÖÁ¼«£¬¼òµ¥¼ÇÂ¼Ò»ÏÂ£¬·½±ã´ó¼ÒÊ¹ÓÃ¡£
-°²×°MySQL 5.7
-ÒòÎª8.0µÄ¸Ä¶¯±È½Ï´ó£¬ÃÜÂëÑéÖ¤µÈĞèÒªĞŞ¸Ä£¬ËùÒÔ¾ÍÊ¹ÓÃMySQL5.7
-ÏÂÔØ¾µÏñ
-docker pull mysql:5.7
-Æô¶¯ÈİÆ÷
-docker run --name mysql -p 3306:3306 --restart=always -e MYSQL_ROOT_PASSWORD=root -v /var/lib/mysql/:/var/lib/mysql/ -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
--p£ºÓ³Éä±¾µØ¶Ë¿Ú3306
---restart£º
---restart¾ßÌå²ÎÊıÖµÏêÏ¸ĞÅÏ¢£º
-no - ÈİÆ÷ÍË³öÊ±£¬²»ÖØÆôÈİÆ÷£»
-on-failure - Ö»ÓĞÔÚ·Ç0×´Ì¬ÍË³öÊ±²Å´ÓĞÂÆô¶¯ÈİÆ÷£»
-always - ÎŞÂÛÍË³ö×´Ì¬ÊÇÈçºÎ£¬¶¼ÖØÆôÈİÆ÷£»
-MYSQL_ROOT_PASSWORD£ºÉèÖÃrootÃÜÂëÎªroot
---character-set-server/--collation-server=utf8mb4_unicode_ci£ºÉèÖÃÄ¬ÈÏÊı¾İ¿â±àÂëÎªutf8mb4,Ä¬ÈÏÅÅĞò¹æÔòÎªutf8mb4_unicode_ci
--v£º¹ÒÔØ±¾µØÄ¿Â¼
-/var/lib/mysql:/var/lib/mysql£ºÓ³ÉäÊı¾İÄ¿Â¼µ½ËŞÖ÷£¬·ÀÖ¹ÈİÆ÷ÖØÆôºóÊı¾İ¶ªÊ§
-/var/mysql/conf:/etc/mysql/conf.d£ºMySQLÅäÖÃÄ¿Â¼£¬ĞŞ¸ÄÈİÆ÷ÖĞÅäÖÃ£¨ÕâÀïÆô¶¯ºó£¬Ô¶³Ì¾Í¿ÉÒÔ·ÃÎÊ£¬ËùÒÔ¾Í²»ÅäÖÃÁË£©
-PS£º
--v°ó¶¨µÄÄ¿Â¼ÒªĞÂ½¨»òÕßÇå¿Õ
-°²×°Redis
-ÏÂÔØ¾µÏñ
-docker pull redis:latest
-ÏÂÔØÅäÖÃÎÄ¼ş
-½«
-https://raw.githubusercontent.com/antirez/redis/4.0/redis.confÅäÖÃÎÄ¼şÏÂÔØµ½±¾µØ
-Æô¶¯ÈİÆ÷
-docker run -p 6379:6379 --restart=always -v $PWD/data:/data -v $PWD/conf/redis.conf:/etc/redis/redis.conf --privileged=true --name myredis -d redis redis-server /etc/redis/redis.conf
---privileged£ºÅäÖÃÈ¨ÏŞ
-redis-server£ºÆô¶¯redis·şÎñÃüÁî
-Æô¶¯ÈİÆ÷£º·¬Íâ
-³ıÁËÒÔÉÏ·½Ê½£¬ÎÒÃÇ»¹¿ÉÒÔÊ¹ÓÃDockerfileµÄ·½Ê½À´´´½¨ºÍÆô¶¯ÈİÆ÷
+https://hub.docker.com/ jerryzu
 
-´´½¨DockerfileÎÄ¼ş
-FROM redis COPY redis.conf /etc/redis/redis.conf CMD [ "redis-server", "/etc/redis/redis.conf" ]
-ÒªÔÚredis.confÎÄ¼şËùÔÚÄ¿Â¼ÏÂ´´½¨
-Éú³É¾µÏñ
-docker build -t redis:v1.0 .
-×îºóµÄ.±íÊ¾Ê¹ÓÃµ±Ç°Ä¿Â¼ÏÂµÄDockerfileÎÄ¼ş(redis:v1.0===¾µÏñÃû:°æ±¾)
-Æô¶¯ÈİÆ÷ÃüÁîÓĞĞ©¸Ä±ä
-docker run -p 6379:6379 --restart=always -v $PWD/data:/data --privileged=true --name myredis -d myredis
-°²×°MongoDB
-ÏÂÔØ¾µÏñ
-docker pull mongo
-docker pull mongo-express ¿ÉÑ¡£¬¿ÉÊÓ»¯web·şÎñÆ÷
-Æô¶¯ÈİÆ÷
-docker run --name mymongo -p 27017:27017 -v $PWD/data:/data/db -d mongo
-Æô¶¯web·ÃÎÊÈİÆ÷
-docker run --link mymongo:mongo -p 8081:8081 mongo-express
-À©Õ¹
-ÉÏÃæÓĞÁ½¸öÈİÆ÷ÅäºÏÊ¹ÓÃ£¬Ò»¸öÊÇMongoDBÈİÆ÷£¬Ò»¸öÊÇÌá¹©ÁË¿ÉÊÓ»¯ÍøÒ³·ÃÎÊµÄÈİÆ÷£¬ÎÒÃÇ¿ÉÒÔÊ¹ÓÃdocker-compose½«Á½¸öÈİÆ÷ÅäÖÃÔÚymlÖĞ£¬ÕâÑùÃ¿´ÎÆô¶¯¾Í¿ÉÒÔÍ¬²½Æô¶¯£¬²»ĞèÒªÊÖ¶¯È¥·Ö±ğÆô¶¯ÁË
-stack.yml
-version: '3.1' services: mongo: image: mongo:latest ports: - 27017:27017 volumes: - ./data:/data/db mongo-express: links: - mongo image: mongo-express ports: - 8081:8081
-docker-compose -f stack.yml up
-dockerÃüÁî
-²é¿´°ó¶¨Ä¿Â¼
-docker inspect ÈİÆ÷ID
-"Mounts": [ { "Type": "bind", "Source": "/home/mysql", "Destination": "/var/lib/mysql", "Mode": "", "RW": true, "Propagation": "rprivate" } ],
-Source£º±¾µØÄ¿Â¼
-Destination£ºÈİÆ÷ÄÚÄ¿Â¼£¨Ò»°ãÄ¬ÈÏ¶¼ÊÇÕâ¸öÄ¿Â¼£¬ÎŞĞèĞŞ¸Ä£©
-²é¿´ÈİÆ÷IP
-docker inspect --format='{{
-.NetworkSettings.IPAddress}}' ÈİÆ÷ID
-²é¿´ÈİÆ÷°ó¶¨¶Ë¿Ú
-docker port ÈİÆ÷ID
+git clone https://github.com/docker/doodle.git
+cd doodle\cheers2019 ;
+docker build -t jerryzu/cheers2019 .
+docker run -it --rm jerryzu/cheers2019
+docker login ;
+docker push jerryzu/cheers2019
+
+docker run hello-world
+docker pull centos:7
+docker images
+docker container ls
+docker stop  c6e292dfb5b3
+docker run -tid --net=host --name centos7  5e35e350aded  bash
+docker exec -ti 0c8fc999 bash
+
+docker run -v c:\Sites\redmine-3.4.5\config\routes.rb:/usr/src/redmine/config/routes.rb -v c:\Sites\redmine-3.4.5\app:/usr/src/redmine/app  -d -p 8088:3000 --name myredmine --link mymysql:mysql redmine:3.4.5
+
+docker run --rm -v c:/Users:/data alpine ls /data
+
+
+docker pull jenkins
+
+docker run -d -p 8002:8080 -v ~/jenkins:/var/jenkins_home --name jenkins --restart=always jenkins
+
+æŸ¥çœ‹å®¹å™¨æ—¥å¿—
+
+docker logs -f jenkins
+
+æŸ¥çœ‹å®¹å™¨è¿è¡Œ
+
+docker ps
+
+
+
+é•œåƒ
+
+docker pull jenkinsci/jenkins
+
+å¯åŠ¨
+
+docker run -d -p 8002:8080 -m 1024m -v ~/jenkins:/var/jenkins_home --name jenkins --restart=always jenkinsci/jenkins
+
+æ—¥å¿—
+
+docker logs -f jenkins
+
+jenkis ç»‘å®šgitlab
+
+docker run -d -p 8002:8080 -m 1024m -v ~/jenkins:/var/jenkins_home --name jenkins --restart=always --link gitlab:gitlab.yiyuery.com jenkinsci/jenkins
+
+=========================================
+# å®šä¹‰å˜é‡
+API_NAME="msa-api-hello"
+API_VERSION="0.0.1"
+API_PORT="8101"
+IMAGE_NAME="127.0.0.1:5000/com.msa/$API_NAME:$BUILD_NUMBER"
+CONTAINER_NAME=$API_NAME-$API_VERSION
+
+# è¿›å…¥targetç›®å½•å¹¶å¤åˆ¶Dockerfileæ–‡ä»¶
+cd $WORKSPACE/target
+cp classes/Dockerfile .
+
+# æ„å»ºDockeré•œåƒ
+docker build -t $IMAGE_NAME .
+
+# æ¨é€Dockeré•œåƒ
+docker push $IMAGE_NAME
+
+# åˆ é™¤Dockerå®¹å™¨
+cid=$(docker ps | grep $CONTAINER_NAME |awk '{print $1}')
+if [ x"$cid" != x ]
+    then
+    docker rm -f $cid
+fi
+
+# å¯åŠ¨Dockerå®¹å™¨
+docker run -d -p $API_PORT:8080 --name $CONTAINER_NAME $IMAGE_NAME
+
+# åˆ é™¤Dockerfileæ–‡ä»¶
+rm -f Dockerfile
+
+======================================
+Dockeræ­å»ºSVNæœåŠ¡å™¨
+å®¿ä¸»æœºæ•°æ®æ–‡ä»¶å¤¹å‡†å¤‡
+æ–°å»ºæ–‡ä»¶å¤¹/opt/data/svn/repoï¼Œå¹¶ç»™dockerç”¨æˆ·èµ‹è¯»å†™æ‰§è¡Œç­‰æƒé™
+[docker@promote ~]$ mkdir /opt/data/svn/repo
+å®‰è£…svnæœåŠ¡
+æœç´¢svné•œåƒ
+[docker@promote ~]$ docker search svn
+è¿™é‡Œæˆ‘ä»¬å–docker.io/garethflowers/svn-serverè¿™ä¸ªé•œåƒ
+[docker@promote ~]$ docker pull docker.io/garethflowers/svn-server
+æŸ¥çœ‹é•œåƒ
+[docker@promote ~]$ docker images
+è¿è¡Œå®¹å™¨
+docker run -v /opt/data/svn/repo:/var/opt/svn --name svn-server -p 3690:3690 -e SVN_REPONAME=repository -d svn_configed
+è¿›å…¥åˆ°å®¹å™¨ä¸­è¿›è¡Œé…ç½®
+[docker@promote ~]$ docker exec -it 64c26480276d /bin/sh
+åˆ›å»ºèµ„æºåº“
+/var/opt/svn # svnadmin create /var/opt/svn/repository
+èµ„æºåº“é…ç½®
+/var/opt/svn/repository/conf # vi svnserve.conf
+
+ç¼–è¾‘å¯†ç æ–‡ä»¶
+/var/opt/svn/repository/conf # vi passwd
+æ–°å¢
+ä¿®æ”¹é‰´æƒæ–‡ä»¶
+é€€å‡ºå®¹å™¨
+exit
+å°†å®¹å™¨å†…ç”Ÿæˆçš„èµ„æºåº“repositoryæ‹·è´åˆ°å®¿ä¸»æœºçš„å¯¹åº”ç›®å½•ä¸‹ï¼Œå› ä¸ºå®¹å™¨ä¸€æ—¦é‡å¯ï¼Œè¿™äº›ä¿¡æ¯å°±ä¼šä¸¢å¤±ï¼Œæ‰€ä»¥åº”è¯¥æŒä¹…åŒ–åˆ°å®¿ä¸»æœºçš„æ–‡ä»¶ç³»ç»Ÿä¸­ã€‚
+docker cp å®¹å™¨ID:/var/opt/svn/repository/ /opt/data/svn/repo
+é‡å¯å®¹å™¨
+[docker@promote repo]$ docker restart svn-server
+
+åœ¨å®¢æˆ·ç«¯æ–°å¢æ–‡ä»¶
+éªŒè¯æ­£å¸¸
+å°†å®¹å™¨åˆ é™¤åå†é‡å¯ï¼Œæµ‹è¯•æ–‡ä»¶æ˜¯å¦å­˜åœ¨ï¼ŒéªŒè¯é‡å¯è¿‡åï¼Œæ–‡ä»¶æ­£å¸¸
+ä¸­é—´é‡è§çš„é—®é¢˜
+å®¹å™¨å†…æ— å†™æƒé™åˆ°å®¿ä¸»æœºæ˜ å°„è¿‡æ¥çš„æ–‡ä»¶é—®é¢˜
+é—®é¢˜çš„åŸå› æ˜¯å› ä¸ºï¼šSeLinuxåšäº†å®‰å…¨é™åˆ¶
+è§£å†³æ–¹æ¡ˆå¦‚ä¸‹
+1. åœ¨å¯åŠ¨å®¹å™¨çš„æ—¶å€™åŠ ä¸Šå¦‚ä¸‹å‚æ•° --privileged=true
+2. ä¸´æ—¶å…³é—­SeLinuxÂ  sudo setinforce 0
+3. æ·»åŠ selinuxè§„åˆ™ï¼Œæ”¹å˜è¦æŒ‚è½½çš„ç›®å½•çš„å®‰å…¨æ€§æ–‡æœ¬ ï¼ˆchconï¼‰
+
+
+docker run -d -v D:\work\svn\tpedw:/var/tpedw --name svn --restart=always centos:7
+
+docker container ls
+
+docker exec -it centos7 /bin/bash
+
+yum install openssh-clients.x86_64
+
+docker commit c6e292dfb5b3 console:v0.1
+
+docker run -d -v D:\work\svn\tpedw:/var/tpedw --name console --restart=always console:v0.1

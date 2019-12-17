@@ -1,0 +1,5 @@
+Windows Registry Editor Version 5.00 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Folder\shell\DeleteSVN] 
+@="<span style="color:rgb(0,0,0);font-family:Verdana, Arial, Helvetica, sans-serif;font-size:12px;text-align:left;background-color:rgb(255,255,255);">Remove Svn</span>" 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Folder\shell\DeleteSVN\command] 
+@="cmd.exe /c \"TITLE Removing SVN Folders in %1 && COLOR 9A && FOR /r \"%1\" %%f IN (.svn) DO RD /s /q \"%%f\" \"" 

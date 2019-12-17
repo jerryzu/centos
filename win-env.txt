@@ -1,7 +1,14 @@
+echo cmd执行!
+
 ::关闭回显
 @echo off
 ::设置要永久加入到path环境变量中的路径
-set My_PATH=要添加的路径
-set PATH=%PATH%;%My_PATH%
+set MySQL_PATH=E:\mysql-5.7.18-winx64\bin
+set PATH=%PATH%;%MySQL_PATH%
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH%" /f
+
+set JAVA_HOME=E:\Java\jdk1.8.0_92
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "JAVA_HOME" /t REG_SZ /d "%JAVA_HOME%" /f
+
+
 exit

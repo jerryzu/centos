@@ -13,3 +13,37 @@ and
 or 
  `path` like '%edw_web_ply_ci.sql'
 )
+
+select table_name, column_name, column_type 
+from information_schema.columns 
+where 
+(table_name like '%web_bas_comm_code' and column_name = 'c_cnm')
+or 
+(table_name like '%web_ply_tgt_obj' and column_name = 'c_tgt_obj_txt_fld_4')
+
+ods_cthx_web_bas_comm_code	c_cnm	varchar(200)
+ods_cthx_web_ply_tgt_obj	C_TGT_OBJ_TXT_FLD_4	varchar(200)
+
+
+发布tpedw文件的流程与样例
+1.将发布需要的文件拷贝到此目录
+cdm_ply_plyedr_dd.sql -- 数据平台调用脚本
+	此文件来源与08src/alidata/edwproject/taskfile/sql，与开发环境实际的运行文件内容一致
+cdm_ply_plyedr_dd-task.sql -- 数据平台任务定义，(无内容时空文件占位)
+cdm_ply_plyedr_dd-ddl.sql -- 目标表，源表字段定义与变更，(无内容时空文件占位)
+2.将cdm_ply_plyedr_dd.sql增加到08src/alidata/edwproject/taskfile/sql
+cp cdm_ply_plyedr_dd.sql ${edw}/08src/alidata/edwproject/taskfile/sql
+
+3.将08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql同步到开发数据平台/alidata/edwproject/taskfile/sql/
+cd /alidata/workspace/edw
+diff 08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql /alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql
+cp 08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql /alidata/edwproject/taskfile/sql/
+more /alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql
+
+4.数据平台运行异常修改08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql同步到开发数据平台/alidata/edwproject/taskfile/sql/
+cp ${edw}/08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql /alidata/edwproject/taskfile/sql
+
+5.数据平台运行稳定后，将08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql同步到当前发布目录
+cp ${edw}/08src/alidata/edwproject/taskfile/sql/cdm_ply_plyedr_dd.sql ./
+
+6.更新其它发布文档，完成发布文件部署，通知生产人员可以启用此目录下的发布
