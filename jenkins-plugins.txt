@@ -1,4 +1,1 @@
-如果是linux环境，选择 “Execute shell”。
-如果是windows环境，选择 “Execute Windows batch command”。
-
 Publish over SSH

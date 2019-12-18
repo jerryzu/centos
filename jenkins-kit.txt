@@ -44,3 +44,377 @@ Exec command: tar -czvf /alidata/workspace/aml/upgrade/sp.tar.gz /alidata/worksp
 解决方案1:
 
 安装插件那个页面，就是提示你offline的那个页面，不要动。然后打开一个新的tab，输入网址http://192.168.211.103:8080/jenkins/pluginManager/advanced。 这里面最底下有个【升级站点】，把其中的链接由https改成http的就好了，http://updates.jenkins.io/update-center.json。 然后在服务列表中关闭jenkins，再tomcat重新启动，这样就能正常联网了
+
+apache-tomcat-8.5.9\conf\context.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+	<Environment name="JENKINS_HOME" value="D:/jenkins/" type="java.lang.String"/>
+</Context>
+
+Windows下以war包形式放在tomcat上运行Jenkins后
+二、解决
+（1）全局设置新增参数
+http://localhost:8080/jenkins/configure
+进入全局设置找到全局属性新增键值对 LANG < - > zh_CN.UTF-8 ，保存
+
+（2）修改tomcat安装目录下的server.xml配置文件
+修改 URIEncoding=“utf-8” 为 useBodyEncodingForURI="true"
+
+（3）配置计算机环境变量
+JAVA_TOOL_OPTIONS
+-Dfile.encoding=UTF8
+
+在tomcat的catalina.sh里配置环境变量
+export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
+
+Publish overSSH的方式: windows服务器
+http://www.freesshd.com/freeSSHd.exe
+
+1.系统管理，系统设置里面配置Publish over SSH
+Jenkins SSH Key
+Passphrase: <这里是自己填充的>
+SSH Servers
+SSH Server
+Name: <alias>
+Hostname: <IP>
+Username:
+Remote Directory: \ --远程访问的目录，表示根目录，对应windows服务器的c:\<username>
+
+Use password authentication, or use a different key
+Passphrase/Password: <user password>
+
+2.在项目中的构建后操作，增加构建后操作步骤，选择send built artifact over SSH选项
+
+SSH Publishers
+SSH Server
+Name: <alias>
+Transfers
+Transfer Set:
+Source files: test\jenkinstest.war -- jenkins工作空间中，用来发送的war包
+Remove prefix: test\ --移除前缀
+Remote directory: test\ -- 发送到远程的目录，是基于远程c:\users\<user>目录的
+Exec command: cmd/c call c:\users\<user>\test\deploy.bat -- 执行远程该目录下的一个批处理命令
+
+注意事项，a.在Exec conmmand中 一定要写上 cmd /c  不然命令无法执行b.执行远程的bat批处理命令
+
+在windows服务器端 我的deploy.bat的内容是
+
+f:
+cd f:\java_projec\tomcat\apache-tomcat-18086-jenkins-api
+call deploy.bat
+:end
+
+我的tomcat在f盘下，在里面还放了一个deploy.bat的批处理文件，内容是
+
+cd bin
+call shutdown.bat
+cd ..
+copy c:\users\<user>\test\jenkinstest.war webapps\
+cd bin
+call startup.bat
+:end
+
+jenkins 连接windows 传输文件夹下面所有得文件与文件夹
+
+------------
+SSH Publishers
+SSH Server
+Name: <alias>
+Transfers
+Transfer Set:
+Source files: build/classes/**
+Remove prefix: build/classes/
+Remote directory: jenjensjar
+Exec command: 
+rm -rf c:/jenkins/bb/*
+mv c:/program\file\openssh/jenkensjar/* c:/jenkins/bb
+
+
+在要传输得文件夹后面写两个 **
+如果只写一个* ，传输得只有build/classes下得文件，文件夹不会传输
+
+如果要复制到另外一个目录，则要先清空该目录，
+rm -rf jenkins/bb/*
+否则会报
+mv: cannot move ‘C:/Program Files/OpenSSH/jenkensjar/java’ to ‘C:/jenkins/bb/java’: Directory not empty
+
+
+
+Publish overSSH的方式: linux服务器
+jenkins服务器上生成密钥对，使用ssh-keygen -t rsa命令
+在~/.ssh/下会有私钥id_rsa和公钥id_rsa.pub
+
+应用服务器上创建~/.ssh文件夹和~/.ssh/authorized_keys文件，并将jenkins服务器的公钥id_rsa.pub中的内容复制到authorized_keys文件
+
+应用服务器上重启ssh服务，service sshd restart
+
+现在jenkins服务器可免密码直接登陆应用服务器
+
+1.系统管理，系统设置里面配置Publish over SSH
+Jenkins SSH Key
+Passphrase: <这里是自己填充的>
+Path to key: /root/.ssh/id_rsa
+
+SSH Servers
+SSH Server
+Name: <alias>
+Hostname: <IP>
+Username:
+Remote Directory: /app
+
+2.在项目中的构建后操作，增加构建后操作步骤，选择send built artifact over SSH选项
+
+SSH Publishers
+SSH Server
+Name: <alias>
+Transfers
+Transfer Set:
+Source files: target/jenkinstest.war -- jenkins工作空间中，用来发送的war包
+Remove prefix: target/ --移除前缀
+Remote directory: test\ -- 发送到远程的目录，是基于远程c:\users\<user>目录的
+Exec command: ~/deploy.sh
+
+------------------
+#!/bin/bash
+FOLDER="/root/server/bak/"
+FILE="/root/server/qbmmj.jar"
+FOLDERTEST="/root/server/bak/qbmmj/"
+#time
+PREFIX="time="
+TIME=`date +%F`
+TIMES=`date +%T`
+KONGGE="--"
+VER="1.5"
+#关掉上次启动的项目
+ID=`netstat -nlp | grep -w 8094 | sed -r 's#.* (.*)/.*#\1#'`
+#echo "port is ：$ID"
+kill -9 $ID
+#备份
+if [ ! -d "$FOLDER" ]
+then
+        mkdir /root/server/bak
+fi
+if [ ! -d "$FOLDERTEST" ]
+then
+        mkdir /root/server/bak/qbmmj
+fi
+if [ -f "$FILE" ]
+then
+cp /root/server/qbmmj.jar /root/server/bak/qbmmj/qbmmj$VER$PREFIX$TIME$KONGGE$TIMES.jar
+rm -f /root/server/qbmmj.jar
+fi
+mv /root/server/qbmmj-v1.0.jar /root/server/qbmmj.jar
+#nohup /usr/java/jdk1.8.0_131/bin/java -jar /root/qbmmj/test-0.0.1-SNAPSHOT.jar &
+#启动
+/usr/local/jdk/bin/java -jar /root/server/qbmmj.jar
+#echo "start success!"
+exit 0
+
+
+
+===========================
+#!/bin/bash
+#这里可替换为你自己的执行程序，其他代码无需更改
+APP_NAME=/opt/javaserver/javaproject/register-center.jar
+#使用说明，用来提示输入参数
+usage() {
+    echo "Usage: sh 执行脚本.sh [start|stop|restart|status]"
+    exit 1
+}
+#检查程序是否在运行
+is_exist(){
+  pid=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}' `
+  #如果不存在返回1，存在返回0     
+  if [ -z "${pid}" ]; then
+   return 1
+  else
+    return 0
+  fi
+}
+
+#启动方法
+start(){
+  is_exist
+  if [ $? -eq "0" ]; then
+    echo "${APP_NAME} is already running. pid=${pid} ."
+  else
+    nohup java -jar $APP_NAME >> register-center.out 2>&1 &
+  fi
+}
+
+#停止方法
+stop(){
+  is_exist
+  if [ $? -eq "0" ]; then
+    kill -9 $pid
+  else
+    echo "${APP_NAME} is not running";
+    start
+  fi  
+}
+
+#输出运行状态
+status(){
+  is_exist
+  if [ $? -eq "0" ]; then
+    echo "${APP_NAME} is running. Pid is ${pid}"
+  else
+    echo "${APP_NAME} is NOT running."
+  fi
+}
+
+#重启
+restart(){
+  stop
+  start
+}
+
+#根据输入参数，选择执行对应方法，不输入则执行使用说明
+case "$1" in
+  "start")
+    start
+    ;;
+  "stop")
+    stop
+    ;;
+  "status")
+    status
+    ;;
+  "restart")
+    restart
+    ;;
+  *)
+    usage
+    ;;
+esac
+
+先要用shell脚本把jar复制到对应的服务器上 
+
+#!/bin/bash  
+scp -r /home/git/.jenkins/workspace/x-x/x-x/target/x-x.jar  tomcat@XX.XX.com:/lxm/deploy/
+echo "复制完成"
+ssh tomcat@wapps.xingmandi.com "sh  ./script/subscibe.sh"
+exit
+#vim subscibe.sh
+
+#!/bin/bash 
+#jdk环境变量
+export JAVA_HOME=/usr/local/jdk1.8.0_181
+export JAVA_BIN=$JAVA_HOME/bin
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
+date=`date +%Y%m%d%H%M%S`
+APP_NAME=subscibe-wechat.jar
+#检查程序是否在运行 
+is_exist(){
+pid=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}' `
+#如果不存在返回1,存在返回0 
+if [ -z "${pid}" ]; then
+return 1
+else
+return 0
+fi
+}
+is_exist
+if [ $? -eq "0" ]; then
+kill -9 $pid
+else
+echo "${APP_NAME} is not running" 
+fi
+cd /lxm/wapps
+mv ${APP_NAME} backup/${APP_NAME%%.*}${date}.jar
+echo "备份成功"
+cd /lxm/deploy
+cp -r ${APP_NAME} /lxm/wapps
+rm -rf ${APP_NAME}
+cd /lxm/wapps
+is_exist
+if [ $? -eq "0" ]; then
+echo "${APP_NAME} is already running. pid=${pid} ." 
+else
+nohup java -jar /lxm/wapps/$APP_NAME --spring.profiles.active=prod  >/lxm/wapps/subscibe.log 2>&1 &
+echo "程序已启动..."
+fi
+is_exist
+if [ $? -eq "0" ]; then
+echo "${APP_NAME} is running. pid is ${pid} "
+else
+echo "${APP_NAME} is not running."
+fi
+exit
+
+http://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
+
+
+http://localhost:8080/jenkins/restart
+
+"Warnings have been published for the following currently installed components"
+
+那就说明这三个插件需要更新，所以在主页面的时候点击“系统管理”→“插件管理”，更新出现以上错误的组件即可。
+
+=============================release step=================================================================
+#!/bin/bash
+cd /alidata/workspace/tpedw/
+svn   --username "zuxh" --password "zuxh" cat svn://10.19.0.22/edw/08src/alidata/edwproject/taskfile/sql/cdm_fin_prm_dd.sql > cdm_fin_prm_dd.sql 
+
+=========================================test step=======================================================
+@echo on
+chcp 65001
+cd D:\work\svn\edw
+for /f "tokens=*" %%a in (..\task.txt) do (
+  echo %%a
+  copy /y 07pm\30-发布\2019-12-17_tpedw\%%a 08src\alidata\edwproject\taskfile\sql\
+  type 08src\alidata\edwproject\taskfile\sql\%%a
+)
+
+==================================================sync step==============================================
+d:
+cd d:\work\svn\edw
+svn  --username "zuxh" --password "zuxh" update
+
+
+===========================
+chmod +x /alidata/workspace/tpedw/1.sh
+/alidata/workspace/tpedw/1.sh
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# pass parameter use gen apk
+
+pathApk=$1  # 接受外部参数
+
+# 取出来最新打的包，进行复制到指定路径
+cd $BASEAPK  # 进入output\debug 路径下
+
+ApkName=$(jq -r  .[0].path  /root/.jenkins2/jobs/npl/workspace/app/build/outputs/apk/debug/output.json) # 使用 jq 工具解析android studio 生成的json获取apk名称
+
+echo $ApkName #打印
+
+cp $pathApk/$ApkName  $pathApk/npl.apk  #进行apk 拷贝，linux 命令
+
+mv -f $pathApk/npl.apk  /usr/tomcat/apache-tomcat-8.0.36/webapps/apk/ # 移动到tomcat 路径下
+
+java -jar /usr/local/android/qrtools/QRcode.jar url=http://10.7.0.201:8080/apk/npl.apk image=latestapk.jpg save=/usr/tomcat/apache-tomcat-8.0.36/webapps/examples/image  # 使用二维码生成jar 生成二维码
+
+output.json: 格式
+[{
+    "outputType": {
+        "type": "APK"
+    },
+    "apkInfo": {
+        "type": "MAIN",
+        "splits": [],
+        "versionCode": 17
+    },
+    "path": "npl-2.0.9-062716-debug.apk",
+    "properties": {
+        "packageId": "com.nuoyuan.npl",
+        "split": "",
+        "minSdkVersion": "14"
+    }
+}]
+
+install jq
+
+sudo apt-get install jq

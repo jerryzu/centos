@@ -3,12 +3,55 @@ echo cmd执行!
 ::关闭回显
 @echo off
 ::设置要永久加入到path环境变量中的路径
-set MySQL_PATH=E:\mysql-5.7.18-winx64\bin
-set PATH=%PATH%;%MySQL_PATH%
+set MySQL_PATH=E:\mysql-5.7.18-winx64
+set PATH=%PATH%;%MySQL_PATH%\bin
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH%" /f
 
 set JAVA_HOME=E:\Java\jdk1.8.0_92
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "JAVA_HOME" /t REG_SZ /d "%JAVA_HOME%" /f
 
+set MAVEN_HOME=E:\apache-maven-3.3.9
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "MAVEN_HOME" /t REG_SZ /d "%MAVEN_HOME%" /f
+
+set MAVEN_PATH=E:\apache-maven-3.3.9
+set PATH=%PATH%;%MAVEN_PATH%\bin
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH%" /f
 
 exit
+
+
+=======================================
+deliver.sh
+#!/bin/bash
+# Author:hukey
+function start(){
+ansible $1 -a "/app/node1/service.sh start"
+}
+ 
+function update(){
+if [ ! -f /var/lib/jenkins/workspace/dev_test/dev_test/*.jar ];then
+    echo '[Error]:java.jar not exist, update failed.'
+    exit 1
+fi
+JAR=$(ls /var/lib/jenkins/workspace/dev_test/dev_test/*.jar)
+ansible $1 -a "{{app_dir1}}/service.sh update"
+ansible $1 -m copy -a "src=$JAR dest={{$2}}"
+}
+ 
+function netPort(){
+ansible $1 -a "netstat -ntplu"
+}
+ 
+update dev_test_node1 app_dir1
+sleep 3
+start dev_test_node1
+ 
+while sleep 5; do
+    START_CODE=$(netPort dev_test_node1 | egrep java | wc -l)
+    if [ $START_CODE -ge 1 ]; then
+        update dev_test_node2 app_dir1
+        sleep 3
+        start dev_test_node2
+        break
+    fi
+done
