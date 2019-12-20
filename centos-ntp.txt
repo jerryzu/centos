@@ -1,0 +1,18 @@
+设置开机自动同步Internet时间，并作定时同步任务
+1、修改时区
+rm -rf /etc/localtime
+ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+vim /etc/sysconfig/clock
+ZONE="Asia/Shanghai"
+UTC=false
+ARC=false
+2、安装并设置开机自启
+yum install -y ntp
+systemctl start ntpd
+systemctl enable ntpd
+3、配置开机启动校验
+vim /etc/rc.d/rc.local
+/usr/sbin/ntpdate ntp1.aliyun.com > /dev/null 2>&1; /sbin/hwclock -w
+4、配置定时任务
+crontab -e
+0 */1 * * * ntpdate ntp1.aliyun.com > /dev/null 2>&1; /sbin/hwclock -w

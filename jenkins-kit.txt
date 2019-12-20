@@ -418,3 +418,354 @@ output.json: 格式
 install jq
 
 sudo apt-get install jq
+
+===============================================================================================
+Post Steps
+Run only if build succeeds
+Execute shell script on remote host using ssh
+SSH site: root@<ip>:22
+
+Command:
+export JAVA_HOME=/usr/local/jdk/jdk1.8.0_144
+/usr/local/dubbo-server/account-server.sh stop
+rm -rf /usr/local/dubbo-server/account/*
+
+Execute shell
+scp -r ${WORKSPACE}/target/lib root@<ip>:/usr/local/dubbo-server/account
+scp ${WORKSPACE}/target/medcare-dubbo-account.jar root@<ip>:/usr/local/dubbo-server/account
+
+Execute shell script on remote host using ssh:
+SSH site: root@<ip>:22
+Command:
+export JAVA_HOME=/usr/local/jdk/jdk1.8.0_144
+/usr/local/dubbo-server/account-server.sh start
+
+account-server.sh脚本
+#!/bin/sh
+  
+## java env
+export JAVA_HOME=/usr/local/jdk/jdk1.8.0_144
+export JRE_HOME=$JAVA_HOME/jre
+  
+## service name
+APP_NAME=account
+  
+SERVICE_DIR=/usr/local/dubbo-server/$APP_NAME
+SERVICE_NAME=medcare-dubbo-$APP_NAME
+JAR_NAME=$SERVICE_NAME\.jar
+PID=$SERVICE_NAME\.pid
+
+cd $SERVICE_DIR
+
+case "$1" in
+  
+    start)
+        nohup $JRE_HOME/bin/java -Xms256m -Xmx512m -jar $JAR_NAME >/dev/null 2>&1 &
+        echo $! > $SERVICE_DIR/$PID
+        echo "=== start $SERVICE_NAME"
+        ;;
+
+    stop)
+        kill `cat $SERVICE_DIR/$PID`
+        rm -rf $SERVICE_DIR/$PID
+        echo "=== stop $SERVICE_NAME"
+	
+        sleep 5
+        ##
+        ## edu-service-aa.jar
+        ## edu-service-aa-bb.jar
+        P_ID=`ps -ef | grep -w "$SERVICE_NAME" | grep -v "grep" | awk '{print $2}'`
+        if [ "$P_ID" == "" ]; then
+            echo "=== $SERVICE_NAME process not exists or stop success"
+        else
+            echo "=== $SERVICE_NAME process pid is:$P_ID"
+            echo "=== begin kill $SERVICE_NAME process, pid is:$P_ID"
+            kill -9 $P_ID
+        fi
+        ;;
+    restart)
+        $0 stop
+        sleep 2
+        $0 start
+        echo "=== restart $SERVICE_NAME"
+        ;;
+    *)
+        ## restart
+        $0 stop
+        sleep 2
+        $0 start
+        ;;
+esac
+exit 0
+
+
+========================================================
+Jenkins+SVN+Maven实现自动打包Jar/War并发布
+发布Jar
+在构建部分，点击增减构建步骤并选择执行shell，shell如下
+
+echo "备份原有jar包"
+cd /usr/local/i2work/target
+mv i2work-reward.jar i2work-reward.jar_bak$(date +%Y%m%d%H%M)
+echo "复制Jar到目标文件夹"
+cd ${WORKSPACE}/target/
+cp i2work-reward.jar /usr/local/i2work/target
+sh /opt/scripts/i2work-stat.sh reward
+
+发布War(本地Tomcat)
+在构建部分，点击增减构建步骤并选择执行shell，shell如下：
+
+echo "进入工作空间"
+cd /root/.jenkins/workspace/i2work-operation/target/
+echo "修改war包名称"
+mv i2work-operation-1.0-SNAPSHOT.war operation.war
+echo "进入tomcat目录并备份原文件"
+cd /usr/local/i2work/apache-tomcat-8.5.4-operation/webapps
+mv operation.war operation_bak$(date +%Y%m%d%H%M).tar.gz
+echo "进入工作空间并复制war到tomcat中"
+cd /root/.jenkins/workspace/i2work-operation/target
+cp operation.war /usr/local/i2work/apache-tomcat-8.5.4-operation/webapps
+echo "重启tomcat"
+sh -x /opt/scripts/operation_restart.sh
+
+
+================================================================
+
+附上shell脚本(Post Steps–SSH Publishers–Transfers–Exec command):
+
+echo "hello xx-0.0.1.SNAPSHOT.jar"
+
+DAY=`date +%Y-%m-%d`
+
+pid=`ps -ef|xx|grep -v grep|awk '{print $2}'`
+
+if [ -n "$pid" ]
+then
+echo 'The pid: server' $pid ' will be killed....'
+kill -9 $pid
+echo 'The pid: server' $pid ' will be start'
+nohup java -jar /data/jekins/xx/xx-0.0.1.SNAPSHOT.jar >  /dev/null & 
+else
+echo 'The pid: server' $pid ' not exist , will be start'
+nohup java -jar /data/jekins/xx/xx-0.0.1.SNAPSHOT.jar >  /dev/null &
+fi
+echo 'The pid: server' $pid ' started'
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ Agent linux-21
+节点连接Jenkins的方式如下：
+
+1.启动节点 在浏览器中启动节点
+
+在命令行中启动节点
+
+java -jar agent.jar -jnlpUrl http://localhost:8080/jenkins/computer/linux-21/slave-agent.jnlp -secret ed271e6f14eb9220ad9a0ae9dd837c50d4562fdcff38ad9d387223d6ef78a83d -workDir "/"
+Run from agent command line, with the secret stored in a file:
+
+echo ed271e6f14eb9220ad9a0ae9dd837c50d4562fdcff38ad9d387223d6ef78a83d > secret-file
+java -jar agent.jar -jnlpUrl http://localhost:8080/jenkins/computer/linux-21/slave-agent.jnlp -secret @secret-file -workDir "/"
+关联到linux-21的项目
+无
+
+
+2.输入节点的名称，并且选中permanent agent,点击ok
+
+3.节点创建成功后会自动跳转到配置页面
+名字：节点的名字
+描述：说明这个节点的用途等
+of executors:并发构建数量
+远程工作目录：用于存放jenkins的工作空间的
+标签：分配job会以标签的名称去分配
+用法：节点的使用策略
+启动方法：windows的话就不要给自己添堵了，选择 Java web start
+
+4.这时节点也配置好了,但是slave节点还是没有连接的状态，这时我们使用slave机器进入Jenkins的管理节点页面
+
+
+点击该节点，进入节点页面，可能出现这样的状态
+
+
+
+
+点击Go to security configuration screen and change it，然后将 TCP port for JNLP agents选择随机选取
+
+
+
+
+然后进入控制面板，将防火墙关闭（不做描述，自行处理）
+回到slave页面，这时页面出现launch 按钮
+
+
+
+
+点击launch ,这时会让我们下载一个文件，下载到我们的slave节点的远程工作目录就可以了
+
+点击图中的launch按钮，他会提示你下载该文件slave-agent.jnlp.按照提示下载该文件，并保存在本地。我们这里需要确认两个问题是否存在：
+
+问题一，确认slave-agent.jnlp 是用javaws来运行的，而不是java.exe 或者是javaw.exe来运行，因为一般的机器默认是采用java.exe启动的。我曾经因为这个问题折腾了好久。
+
+问题二，将slave-agent.jnlp用notepad打开后，确认其中的URL是可用的Jenkins地址。其中的配置可能是这样的：
+<jnlp spec="1.0+" codebase="http://16.158.69.53:9999/jenkins/computer/irshost12.tc.tb.com/">
+<information>
+<title>Slave Agent for irshost12.tc.tb.com</title>
+<vendor>Jenkins project</vendor>
+<homepage href="https://jenkins-ci.org/"/>
+</information>
+<security><all-permissions/></security>
+<resources><j2se version="1.5+"/><jar href="http://16.158.69.53:9999/jenkins/jnlpJars/remoting.jar"/><property name="hudson.showWindowsServiceInstallLink" value="true"/>
+</resources><application-desc main-class="hudson.remoting.jnlp.Main">
+<argument>60c101541d377ad629da21b37c24cd6227edef74b97ff663c5b09e261ac2d5d6</argument><argument>irshost12.tc.tb.com</argument><argument>-url</argument>
+<argument>http://16.158.69.53:9999/jenkins/</argument>
+</application-desc>
+</jnlp>
+确认其中的url地址是上面的正确的地址,而不是localhost,因为我的jenkins部署在本地测试。
+
+安装slave-agent.jnlp之前必须要在节点服务器安装JDK环境，至于如何安装JDK这里就不在说明了，网上教程很多，下面安装slave-agent.jnlp，双击slave-agent.jnlp文件，出现下图界面：
+
+
+
+
+然后双击slave-agent,出现connected说明连接成功
+
+
+
+上面的窗口关闭或者电脑重启后，这个节点也就关闭了，所以最好把这个节点加入window服务。
+
+点击窗口的file菜单，点击Install as a service,完成
+
+　　
+
+ 
+
+成功示例：（红框所示）
+
+
+
+
+现在回到jenkins的管理节点页面，刷新一下界面，发现slave节点的红色 的那个X已经没有了，说明连接成功
+
+
+
+5.关联job，进入job的配置页面，勾选Restrict where this project can be run，并且在Label Expression输入奴隶节点的标签名（一个标签有可能对应多台slave节点）,也可以输入slave节点的名称
+
+7.进行构建，查看控制台信息，可以看到运行的确实是windows的机器
+
+
+
+linux与mac的配置大同小异，只需稍加改动就可以了，这样配置好之后就可以实现分布式构建，在做自动化测试的时候我们只需要将测试服务器配置为slave节点，配置好相应的job来监控开发job或者开发的代码是否有变动或者构建的动作，根据自己的情况执行测试项目的构建动作，从而实现持续集成
+
+在安装过程中，可能会出现以下报错，导致安装失败：
+
+
+
+在一些文档中，说是主机不信任客户机，但是没有说明该如何去解决（主机和客户机两边的防火墙都已经关闭了）
+
+最终我用以下的方法成功运行了它：将"slave-agent.jnlp“文件用notepad打开，将文本中的“localhost”用主机的IP地址去代替，保存文件后用Java打开（Launch）即可；
+
+
+wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+
+wget http://mirrors.cnnic.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+
+vim /usr/local/maven/conf/settings.xml
+<mirrors>
+    <id>nexus-aliyun</id> 
+    <mirrorOf>central</mirrorOf>
+    <name>Nexus aliyun</name>
+    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+</mirrors>
+
+=======================================================================================
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/conf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/conf</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
+/*********************sample git maven jar ****************************************/
+<?xml version='1.1' encoding='UTF-8'?>
+<maven2-moduleset plugin="maven-plugin@3.4">
+  <goals>clean package</goals>
+  <postbuilders>
+    <jenkins.plugins.publish__over__ssh.BapSshBuilderPlugin plugin="publish-over-ssh@1.20.1">
+      <delegate>
+        <delegate plugin="publish-over@0.22">
+          <publishers>
+            <jenkins.plugins.publish__over__ssh.BapSshPublisher plugin="publish-over-ssh@1.20.1">
+              <configName>actuary</configName>
+              <transfers>
+                <jenkins.plugins.publish__over__ssh.BapSshTransfer>
+                  <remoteDirectory></remoteDirectory>
+                  <sourceFiles>target/aml-1.0-SNAPSHOT.jar,target/lib/*.jar,target/conf/*.*</sourceFiles>
+                  <removePrefix>target/</removePrefix>
+
+
+/*********************node(linux) shell ****************************************/
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>cd /alidata/workspace/ &amp;&amp; tar -czvf aml-1.0-SNAPSHOT.tar.gz * </command>
+
+==========================================================================================================
+deliver.sh
+#!/bin/bash
+# author:hukey
+function start(){
+ansible $1 -a "/app/node1/service.sh start"
+}
+ 
+function update(){
+if [ ! -f /var/lib/jenkins/workspace/dev_test/dev_test/*.jar ];then
+    echo '[error]:java.jar not exist, update failed.'
+    exit 1
+fi
+jar=$(ls /var/lib/jenkins/workspace/dev_test/dev_test/*.jar)
+ansible $1 -a "{{app_dir1}}/service.sh update"
+ansible $1 -m copy -a "src=$jar dest={{$2}}"
+}
+ 
+function netport(){
+ansible $1 -a "netstat -ntplu"
+}
+ 
+update dev_test_node1 app_dir1
+sleep 3
+start dev_test_node1
+ 
+while sleep 5; do
+    start_code=$(netport dev_test_node1 | egrep java | wc -l)
+    if [ $start_code -ge 1 ]; then
+        update dev_test_node2 app_dir1
+        sleep 3
+        start dev_test_node2
+        break
+    fi
+done
+
+http://localhost:8080/jenkins/user/jerry/configure
+
+java -jar jenkins-cli.jar -s http://localhost:8080/jenkins/ -auth jerry:1175cc661da55c485b7371eb863a41ca36 list-jobs
+java -jar jenkins-cli.jar -s http://localhost:8080/jenkins/ -auth jerry:1175cc661da55c485b7371eb863a41ca36 get-job 5.aml > 5.aml.xml
