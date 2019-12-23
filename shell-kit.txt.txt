@@ -1,0 +1,4 @@
+awk -vRS='\\[[^]]*]\n' 'RT~/DEV/{getline i;printf i}'  deploy.ini
+awk -vRS='\\[[^]]*]\n' 'RT~/UAT/{getline i;printf i}'  deploy.ini
+awk -vRS='\\[[^]]*]\n' 'RT~/PRD/{getline i;printf i}'  deploy.ini
+
