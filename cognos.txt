@@ -1,35 +1,24 @@
---文件位置
-[cognos@DEV-COGNOSSRV configuration]$ cd /alidata/cognos/c10_64/configuration
+select * from cmclasses where classid in (0, 33, 1, 10, 20,63)
+-- 0	root
+-- 1	folder
+-- 10	report
+-- 20	URL
+-- 33	content
+-- 63	shortcut
 
--- 内容位置
-[cognos@DEV-COGNOSSRV configuration]$ grep -rn -B10 -A10 '10.19.0.22:8080' ./cogstartup.xml
-  <crn:value xsi:type="xsd:string">IPv4</crn:value>
-</crn:parameter>
-<!-- gateway: Specifies the URI to the gateway.  -->
-<!-- The gateway must be located on the same computer as a Web server. If you are using 
-     ISAPI, change 'cognos.cgi' to 'cognosisapi.dll'. If you are using apache modules, 
-     change 'cognos.cgi' to the alias name defined in Apache Web Server configuration 
-     file (httpd.conf). Use the 'https' or 'http' protocol to select SSL or non-SSL communication. 
-     The host name portion of the gateway URI must be changed from localhost to an IP 
-     address or a network host name.  -->
-<crn:parameter name="gateway">
-  --修改前
-  <crn:value xsi:type="xsd:anyURI">http://10.19.2.22:9300/p2pd/servlet/dispatch</crn:value>
-  --修改后
-  <crn:value xsi:type="xsd:anyURI">http://10.19.0.22:8080/p2pd/servlet/dispatch</crn:value>
-</crn:parameter>
-<!-- gatewayNamespace: Specifies the Namespace ID of the authentication provider to which 
-     the gateway connects to verify user credentials.  -->
-<!-- Use this property so that the gateway connects to one namespace. Users logged onto 
-     the Web server where the gateway is located are not prompted to choose an authentication 
-     source. By default, the gateway uses all configured namespaces and you are prompted 
-     to select a namespace.  -->
-<crn:parameter name="gatewayNamespace">
-  <crn:value xsi:type="xsd:string"></crn:value>
-</crn:parameter>
---重启cognos服务
-[cognos@DEV-COGNOSSRV configuration]$ cd /alidata/cognos/c10_64/bin64
-[cognos@DEV-COGNOSSRV configuration]$ ps -ef | grep /alidata/cognos | awk '{print $2}' | xargs kill -9
-[cognos@DEV-COGNOSSRV bin64]$ ./cogconfig.sh -s
+select * 
+from cmobjects o
+inner join cmobjnames n on o.cmid = n.cmid and localeid = 454
+where o.pcmid = 6839
 
-mysqldump --set-gtid-purged=off -hrm-bp19v63q682asdrja.mysql.rds.aliyuncs.com -utaipingbi_etl -p'Tpstic123456' -t -w"pt=20191013000000" tpedw ods_cthx_web_ply_base | gzip > tpedw-`date +%Y-%m-%d`.sql.gz
+with tree as (
+select t.*, sys_connect_by_path(t.cmid,'->') paths, level blank
+from cmobjects t 
+start with cmid = 0
+connect by nocycle  pcmid = prior cmid and classid in (0, 33, 1, 10, 20,63)
+)
+
+select t.paths, t.classid, lpad(' ', blank * 2) || n.name, blank
+from tree t
+    inner join cmobjnames n on t.cmid = n.cmid and localeid = 454
+order by paths;

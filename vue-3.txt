@@ -1,0 +1,77 @@
+1 安装nodejs
+yum install nod
+
+2 
+// use npm
+npm i nrm -g
+查看可用的npm源
+
+nrm ls
+
+nrm use taobao
+// 切换之后可用 nrm ls查看是否已经切换了npm源
+
+npm i yarn -g
+
+
+3 安装vue工具包
+npm uninstall -g vue-cli
+npm install -g @vue/cli
+
+4 创建项目（cmd到自己项目想产生的位置）
+vue create xxx （xxx为项目名）；
+
+5 进入到项目根目录：添加iview依赖
+npm install iview  --save
+
+6 进入到项目根目录：启动项目
+npm run serve
+
+7 打包
+npm run build
+
+
+=======================
+// 进入到vue-test项目
+cd vue-test
+// - 启动服务
+yarn serve
+// - 打包编译
+yarn build
+// - 执行lint
+yarn lint
+// - 执行单元测试
+yarn test:unit
+
+
+
+module.exports = {
+  devServer: {
+    proxy: {
+     '/hrm/api': {
+        //target: 'http://192.168.1.209:10751/', // Dev环境
+        //  target: 'http://192.168.1.238:10751/', // Test环境
+        // target: 'http://192.168.1.215:10751/', // Rls环境
+        target: 'http://192.168.1.218:10751/', // 正式环境
+        changeOrigin: true,
+        autoRewrite: true,
+        cookieDomainRewrite: true,
+        pathRewrite: {
+          '^/hrm/api/': '/'
+        }
+      }
+    }
+  }
+}
+
+vi nginx.conf
+
+server {
+	location / {
+		root /software/dist;
+		index index.html index.html;
+	}
+/usr/local/nginx/sbin/nginx -s reload
+
+
+npm install --save core-js@^3
