@@ -74,4 +74,196 @@ server {
 /usr/local/nginx/sbin/nginx -s reload
 
 
-npm install --save core-js@^3
+npm upgrade -g core-js@^3
+
+npm update常用命令使用
+一、更新
+
+npm-check检查更新
+npm install -g npm-check
+npm-check
+2.npm-upgrade更新
+npm install -g npm-upgrade
+npm-upgrade
+
+3.更新全局包：
+npm update <name> -g
+
+4.更新生产环境依赖包：
+npm update <name> --save
+
+5.更新开发环境依赖包：
+npm update <name> --save-dev
+
+
+安装sinopia
+
+npm install -g sinopia
+
+安装成功之后，修改npm路径为本地，
+
+npm set registry http://localhost:4873/
+ 
+
+$ npm set ca null
+
+如果使用HTTPS，请添加适当的CA信息，（“null”表示从操作系统获取CA列表）
+
+添加新用户
+
+npm adduser --registry http：// localhost：4873 /
+
+
+sudo npm cache verify
+
+解决方案 由于 npm 5 使用了新的包管理模式，所以在升级之后，请先清空一下本地缓存：
+
+npm cache clean --force 。
+如果上边没办法解决问题，可以尝试下边的指令：
+
+npm cache clear --force && npm install --no-shrinkwrap --update-binary
+
+yarn global add  @vue/cli
+
+yarn global add  sinopia
+yarn global add  pm2
+
+
+npm 与 yarn 命令对比
+npm	yarn
+npm install	yarn install
+(N/A)	yarn install --flat
+(N/A)	yarn install --har
+(N/A)	yarn install --no-lockfile
+(N/A)	yarn install --pure-lockfile
+npm install [package]	(N/A)
+npm install --save [package]	yarn add [package]
+npm install --save-dev [package]	yarn add [package] [--dev/-D]
+(N/A)	yarn add [package] [--peer/-P]
+npm install --save-optional [package]	yarn add [package] [--optional/-O]
+npm install --save-exact [package]	yarn add [package] [--exact/-E]
+(N/A)	yarn add [package] [--tilde/-T]
+npm install --global [package]	yarn global add [package]
+npm rebuild	yarn install --force
+npm uninstall [package]	(N/A)
+npm uninstall --save [package]	yarn remove [package]
+npm uninstall --save-dev [package]	yarn remove [package]
+npm uninstall --save-optional [package]	yarn remove [package]
+npm cache clean	yarn cache clean
+rm -rf node_modules && npm install	yarn upgrade
+
+
+yarn add  iview
+yarn add  serve
+
+[root@dns demo]# more src/main.js 
+import Vue from 'vue'
+import App from './App.vue'
+
+import iView from 'iview'
+import 'iview/dist/styles/iview.css'
+
+Vue.config.productionTip = false
+
+Vue.use(iView)
+
+vue add router 
+
+yarn serve
+
+vue ui
+
+yarn build
+
+===================
+Set correct publicPath in vue.config.js.
+
+If you are deploying to https://<USERNAME>.github.io/, you can omit publicPath as it defaults to "/".
+
+If you are deploying to https://<USERNAME>.github.io/<REPO>/, (i.e. your repository is at https://github.com/<USERNAME>/<REPO>), set publicPath to "/<REPO>/". For example, if your repo name is "my-project", your vue.config.js should look like this:
+
+module.exports = {
+  publicPath: process.env.NODE_ENV === 'production'
+    ? '/my-project/'
+    : '/'
+}
+
+nginx.conf
+user  nginx;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+events {
+  worker_connections  1024;
+}
+http {
+  include       /etc/nginx/mime.types;
+  default_type  application/octet-stream;
+  log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+  access_log  /var/log/nginx/access.log  main;
+  sendfile        on;
+  keepalive_timeout  65;
+  server {
+    listen       80;
+    server_name  localhost;
+    location / {
+      root   /app; ### 根据这里定位静态文件
+      index  index.html;
+      try_files $uri $uri/ /index.html;
+    }
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+      root   /usr/share/nginx/html;
+    }
+  }
+}
+
+https://cli.vuejs.org/guide/deployment.html#docker-nginx
+
+node的测试web服务器
+/app/sample/node_modules/.bin/serve  -s dist
+
+
+
+private:npm仓库名称
+nrm add private http://192.168.152.128:4873
+nrm use private
+
+添加用户的ip,可能是用户识别的一部分
+npm adduser --registry http://localhost:4873/
+nrm add local http://localhost:4873/
+nrm use local
+
+npm login
+
+/root/.config/sinopia/config.yaml
+config.yaml文件是sinopia的配置文件
+storage: ./storage  //npm包存放的路径
+
+auth:
+  htpasswd:
+    file: ./htpasswd   //保存用户的账号密码等信息
+    max_users: -1  //默认为1000，改为-1，禁止注册
+
+uplinks:
+  npmjs:
+    url: http://registry.npm.taobao.org/  //默认为npm的官网，由于国情，修改 url 让sinopia使用 淘宝的npm镜像地址
+    
+packages:  //配置权限管理
+  '@*/*':
+    access: $all
+    publish: $authenticated
+
+  '*':
+    access: $all
+
+    publish: $authenticated
+
+    proxy: npmjs
+
+logs:
+  - {type: stdout, format: pretty, level: http}
+listen: 0.0.0.0:4873  ////默认没有，只能在本机访问，添加后可以通过外网访问。
+
