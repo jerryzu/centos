@@ -1,0 +1,7 @@
+
+org.jenkins-ci.main:jenkins-war:war:1.398
+org.jenkins-ci.main:jenkins-test-harness:jar:1.398
+org.jenkins-ci.main:jenkins-war:jar:war-for-test:1.398
+org.jenkins-ci.main:maven-agent:jar:1.398
+org.jenkins-ci.main:maven-interceptor:jar:1.398
+org.jenkins-ci.main:maven3-agent:jar:1.398
