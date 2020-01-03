@@ -690,3 +690,665 @@ yarn serve
 
 node core/app.js
 
+http://localhost:8080/sockjs-node/info?t=1556418283950 net:: ERR_CONNECTION_REFUSED（亲测有效~!）
+如果你的项目没有用到sockjs,vuecli3 运行npm run serve 之后network里面一直调用一个接口:
+http://localhost:8080/sockjs-node/info?t=1556418283950     net:: ERR_CONNECTION_REFUSED
+
+原因：network里一直调用的这个借口其实是不存在的,所以导致一直报错。
+方案：从根源上关闭此调用
+1、node_modules/sockjs-client/dist/sockjs.js
+2、代码的1605行注释
+// self.xhr.send(payload);
+
+#ps:可在代码开发完成后关闭，会同步关闭热加载
+
+在main.js中添加了
+
+import iView from 'iview'
+import 'iview/dist/styles/iview.css'    // 使用 CSS
+Vue.use(iView)
+
+src/App.vue:
+<template>
+  <div id="app">
+    <LoginForm></LoginForm>
+  </div>
+</template>
+
+<script>
+import LoginForm from './components/LoginForm'
+export default {
+  name: 'app',
+  components: {
+    'LoginForm': LoginForm
+  }
+}
+</script>
+
+<style>
+#app {
+
+}
+</style>
+
+使用iview 组件
+创建 src/components/LoginForm.vue
+<template>
+  <div>
+    <Form ref="formInline" :model="formInline" :rules="ruleInline" inline>
+        <FormItem prop="user">
+            <Input type="text" v-model="formInline.user" placeholder="Username">
+                <Icon type="ios-person-outline" slot="prepend"></Icon>
+            </Input>
+        </FormItem>
+        <FormItem prop="password">
+            <Input type="password" v-model="formInline.password" placeholder="Password">
+                <Icon type="ios-locked-outline" slot="prepend"></Icon>
+            </Input>
+        </FormItem>
+        <FormItem>
+            <Button type="primary" @click="handleSubmit('formInline')">登录</Button>
+        </FormItem>
+    </Form>
+  </div>
+</template>
+<script>
+export default {
+  data () {
+    return {
+      formInline: {
+        user: '',
+        password: ''
+      },
+      ruleInline: {
+        user: [
+          { required: true, message: '请填写用户名', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请填写密码', trigger: 'blur' },
+          { type: 'string', min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  methods: {
+    handleSubmit (name) {
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          this.$Message.success('提交成功!')
+        } else {
+          this.$Message.error('表单验证失败!')
+        }
+      })
+    }
+  }
+}
+</script>
+
+response.data不是数组，所以没有forEach这个方法。response.data.results才是你需要的数组吧
+
+
+
+,
+          {
+            title:"操作",
+            key:"actor",
+            align:'center',
+            render: (h, params) => {
+              if(this.giftCardsList[params.index].status === '进行中'){
+                return h('div', [
+                    h('Button', {
+                        props: {
+                            type: 'primary',
+                            size: 'small'
+                        },
+                        style: {
+                            marginRight: '5px'
+                        },
+                        on: {
+                            click: () => {
+                                this.$router.push({ path: '../marketing_manage/add_gift_card?gcid=' + this.giftCardsList[params.index].gcid});
+                            }
+                        }
+                    }, '编辑'),
+                    h('Button', {
+                        props: {
+                            type: 'error',
+                            size: 'small'
+                        },
+                        on: {
+                            click: () => {
+                                this.popupIsShow = true; 
+                                this.gcid = this.giftCardsList[params.index].gcid;
+                            }
+                        }
+                    }, '使失效')
+                ]);
+              }else{
+                return h('div', [
+                    h('Button', {
+                        props: {
+                            type: 'primary',
+                            size: 'small'
+                        },
+                        on: {
+                            click: () => {
+                                this.$router.push({ path: '../marketing_manage/gift_card_warehouse?gcid=' + this.giftCardsList[params.index].gcid});
+                            }
+                        }
+                    }, '码库')
+                ]);
+              }
+            }
+          }
+
+
+ceshi.service.js
+
+import { get } from '@/config/http'
+
+export function getUserData() {
+  return get('/users')
+}
+
+import { getUserData } from "@/services/ceshi.service"; // 引入接口
+
+
+export default {
+  data() {
+  },
+  created(){
+       this.data = [
+      {
+        name: "李小红",
+        age: 30,
+        birthday: "563472000000",
+        address: "上海市浦东新区世纪大道"
+      },
+      {
+        name: "周小伟",
+        age: 26,
+        birthday: "687024000000",
+        address: "深圳市南山区深南大道"
+      }
+    ];
+    console.log("wine")
+  },
+  methods: {
+    async getInfo() {
+      const result = await getUserData();
+      this.data = result.data;
+    }
+
+
+<i-table height="660" border :content="self" :columns="columns" :data="warehouseList" ref="table" @on-selection-change="gccidArr"></i-table>
+
+<i-button style="margin-top:10px" type="primary" size="large" @click="exportData()"><Icon type="ios-download-outline"></Icon> 导出数据 </i-button>
+        columns:[
+        {
+          type: 'selection',
+          width: 50,
+          align: 'center',
+        },
+
+  methods: {
+	 gccidArr(selection){
+	      this.selection = selection;
+	    },
+
+	    exportData: function(){
+      let self = this;
+      this.$refs.table.exportCsv({
+          filename: '码库',
+          original: false, 
+          columns: self.columns,
+          data: self.selection
+      });
+    }, 
+    
+    <i-table height="660" border :content="self" :columns="columns" :data="warehouseList" ref="table" @on-selection-change="gccidArr"></i-table>
+
+	意思就是在data对象（就是后台返回的数据，也即应用table里的数据，也就是上文在HTML代码里的:data="warehouseList"里 的warehouseList）里面添加一个属性_disabled，且它的值为true即可，看JS代码：
+
+    handleDeadline: function(warehouseList){
+      warehouseList.forEach(element => {
+        if(element.status == '0'){
+          element['_disabled'] = true;
+        }
+      });
+      return warehouseList;
+    },
+
+
+
+{
+                        title: 'Action',
+                        key: 'action',
+                        width: 150,
+                        align: 'center',
+                        render: (h, params) => {
+                            return h('div', [
+                                h('Button', {
+                                    props: {
+                                        type: 'primary',
+                                        size: 'small'
+                                    },
+                                    style: {
+                                        marginRight: '5px'
+                                    },
+                                    on: {
+                                        click: () => {
+                                            this.show(params.index)
+                                        }
+                                    }
+                                }, 'View')
+                            ]);
+                        }
+
+
+
+由文档得知，table组件提供一个api：render函数，可以自定义渲染当前列，包括渲染自定义组件，它基于 Vue 的 Render 函数。
+
+ 
+
+参数解读：
+
+h:  vue  Render函数的别名（全名 createElement）即 Render函数
+
+params： table 该行内容的对象
+
+props：设置创建的标签对象的属性
+
+style：设置创建的标签对象的样式
+
+on：为创建的标签绑定事件
+
+所以代码中的render函数，即创建的一个div中包裹一个button按钮，同时给button设置了相关属性和绑定事件 
+
+
+
+<template>
+    <div class="meeting">
+        <Table border :columns="columns" :data="data" :height="tableHeight"></Table>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "meeting",
+        data() {
+　　　　　　　　　 let t = this
+            return {
+                tableHeight:'550',
+                columns: [
+                    {
+                        title: '责任人',
+                        key: 'associated',
+                        width: 100,
+                        align: 'center',
+                    },
+                    {
+                        title: '预计工时',
+                        key: 'attendee',
+                        width: 100,
+                        align: 'center',
+                        render:(h,params) => {
+                            return h('Input',{
+                                props: {
+                                    value:'',
+                                    size:'small',
+                                },
+                                on: {
+                                    input: (val) => {
+                                        t.data[params.index].estimateTime = val
+                                    }
+                                },
+                            })
+                        }
+                    },
+                    {
+                        title: '实际工时',
+                        key: 'state',
+                        width: 100,
+                        align: 'center',
+                        render:(h,params) => {
+                            return h('Input',{
+                                props: {
+                                    value:'',
+                                    size:'small',
+                                },
+                                on: {
+                                    input: (val) => {
+                                        t.data[params.index].actualTime = val
+                                    }
+                                },
+
+                            })
+                        }
+                    },
+                    {
+                        title: 'WorkHover状态',
+                        key: 'action',
+                        width: 150,
+                        align: 'center',
+                        render: (h, params) => {
+                            return h('Select',{
+                                    props:{
+                                    },
+                                    on: {
+                                        'on-change':(event) => {
+                                            this.data[params.index].volumeType = event;
+                                        }
+                                    },
+                                },
+                                params.row.action.map((item) =>{
+                                    return h('Option', {
+                                        props: {
+                                            value: item.value,
+                                            label: item.name
+                                        }
+                                    })
+                                })
+                            )
+                        }
+                    },
+
+                ],
+                data: [
+                    {
+                        associated: '123',
+                        action:[
+                            {
+                                value:0,
+                                name:'select A'
+                            },
+                            {
+                                value:1,
+                                name:'select B'
+                            },
+                        ]
+                    },
+                    {
+                        associated: '123',
+                        action:[
+                            {
+                                value:0,
+                                name:'select A'
+                            },
+                            {
+                                value:1,
+                                name:'select B'
+                            },
+                        ]
+                    },
+                ],
+            }
+        },
+        methods: {}
+    };
+</script>
+
+
+
+================================================================
+var express = require('express');   //引入express模块
+var mysql = require('mysql');     //引入mysql模块
+var app = express();        //创建express的实例
+var connection = mysql.createConnection({      //创建mysql实例
+    host: 'localhost',
+    port: '3306',
+    user: 'root',
+    password: 'gemini',
+    database: 'er'
+});
+connection.connect();
+
+
+var sql1 = 'select * from user';
+var str1 = " ";
+connection.query(sql1, function (err, result) {
+    if (err) {
+        console.log('[SELECT ERROR]:', err.message);
+    }
+    str1 = JSON.stringify(result);
+    //数据库查询的数据保存在result中，但浏览器并不能直接读取result中的结果，因此需要用JSON进行解析
+    //console.log(result);   //数据库查询结果返回到result中
+    console.log(str1);
+});
+app.get('/users', function (req, res) {
+    res.send(str1);  //服务器响应请求
+});
+
+
+connection.end();
+app.listen(3000, function () {    ////监听3000端口
+    console.log('Server running at 3000 port');
+});
+
+Js单引号转义
+\' 
+
+Elements in iteration expect to have 'v-bind:key' directives 
+  <li v-for="todo in todos"  v-bind:key="todo">
+
+
+
+     created() {//初始化获取菜单json 
+            this.$http.get('dashboard/entries')
+                .then(res => {
+                    let code = res.data.returnCode;
+                    if (code == 0) {
+                        this.treeData = res.data.beans;
+                    } else {
+                        alert(res.data.returnMessage);
+                    }
+                })
+                .catch(function (error) {
+                    console.log(error)
+                })
+        }
+
+beans
+	title
+	icon
+	children
+
+yarn add  less-loader less
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+<template>
+    <Form :model="formItem" :label-width="80">
+        <FormItem label="Input">
+            <Input v-model="formItem.input" placeholder="Enter something..."></Input>
+        </FormItem>
+        <FormItem label="Select">
+            <Select v-model="formItem.select">
+                <Option value="beijing">New York</Option>
+                <Option value="shanghai">London</Option>
+                <Option value="shenzhen">Sydney</Option>
+            </Select>
+        </FormItem>
+        <FormItem label="DatePicker">
+            <Row>
+                <Col span="11">
+                    <DatePicker type="date" placeholder="Select date" v-model="formItem.date"></DatePicker>
+                </Col>
+                <Col span="2" style="text-align: center">-</Col>
+                <Col span="11">
+                    <TimePicker type="time" placeholder="Select time" v-model="formItem.time"></TimePicker>
+                </Col>
+            </Row>
+        </FormItem>
+        <FormItem label="Radio">
+            <RadioGroup v-model="formItem.radio">
+                <Radio label="male">Male</Radio>
+                <Radio label="female">Female</Radio>
+            </RadioGroup>
+        </FormItem>
+        <FormItem label="Checkbox">
+            <CheckboxGroup v-model="formItem.checkbox">
+                <Checkbox label="Eat"></Checkbox>
+                <Checkbox label="Sleep"></Checkbox>
+                <Checkbox label="Run"></Checkbox>
+                <Checkbox label="Movie"></Checkbox>
+            </CheckboxGroup>
+        </FormItem>
+        <FormItem label="Switch">
+            <i-switch v-model="formItem.switch" size="large">
+                <span slot="open">On</span>
+                <span slot="close">Off</span>
+            </i-switch>
+        </FormItem>
+        <FormItem label="Slider">
+            <Slider v-model="formItem.slider" range></Slider>
+        </FormItem>
+        <FormItem label="Text">
+            <Input v-model="formItem.textarea" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="Enter something..."></Input>
+        </FormItem>
+        <FormItem>
+            <Button type="primary">Submit</Button>
+            <Button style="margin-left: 8px">Cancel</Button>
+        </FormItem>
+    </Form>
+</template>
+<script>
+    export default {
+        data () {
+            return {
+                formItem: {
+                    input: '',
+                    select: '',
+                    radio: 'male',
+                    checkbox: [],
+                    switch: true,
+                    date: '',
+                    time: '',
+                    slider: [20, 50],
+                    textarea: ''
+                }
+            }
+        }
+    }
+</script>
+
+
+
+<template>
+    <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80">
+        <FormItem label="Name" prop="name">
+            <Input v-model="formValidate.name" placeholder="Enter your name"></Input>
+        </FormItem>
+        <FormItem label="E-mail" prop="mail">
+            <Input v-model="formValidate.mail" placeholder="Enter your e-mail"></Input>
+        </FormItem>
+        <FormItem label="City" prop="city">
+            <Select v-model="formValidate.city" placeholder="Select your city">
+                <Option value="beijing">New York</Option>
+                <Option value="shanghai">London</Option>
+                <Option value="shenzhen">Sydney</Option>
+            </Select>
+        </FormItem>
+        <FormItem label="Date">
+            <Row>
+                <Col span="11">
+                    <FormItem prop="date">
+                        <DatePicker type="date" placeholder="Select date" v-model="formValidate.date"></DatePicker>
+                    </FormItem>
+                </Col>
+                <Col span="2" style="text-align: center">-</Col>
+                <Col span="11">
+                    <FormItem prop="time">
+                        <TimePicker type="time" placeholder="Select time" v-model="formValidate.time"></TimePicker>
+                    </FormItem>
+                </Col>
+            </Row>
+        </FormItem>
+        <FormItem label="Gender" prop="gender">
+            <RadioGroup v-model="formValidate.gender">
+                <Radio label="male">Male</Radio>
+                <Radio label="female">Female</Radio>
+            </RadioGroup>
+        </FormItem>
+        <FormItem label="Hobby" prop="interest">
+            <CheckboxGroup v-model="formValidate.interest">
+                <Checkbox label="Eat"></Checkbox>
+                <Checkbox label="Sleep"></Checkbox>
+                <Checkbox label="Run"></Checkbox>
+                <Checkbox label="Movie"></Checkbox>
+            </CheckboxGroup>
+        </FormItem>
+        <FormItem label="Desc" prop="desc">
+            <Input v-model="formValidate.desc" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="Enter something..."></Input>
+        </FormItem>
+        <FormItem>
+            <Button type="primary" @click="handleSubmit('formValidate')">Submit</Button>
+            <Button @click="handleReset('formValidate')" style="margin-left: 8px">Reset</Button>
+        </FormItem>
+    </Form>
+</template>
+<script>
+    export default {
+        data () {
+            return {
+                formValidate: {
+                    name: '',
+                    mail: '',
+                    city: '',
+                    gender: '',
+                    interest: [],
+                    date: '',
+                    time: '',
+                    desc: ''
+                },
+                ruleValidate: {
+                    name: [
+                        { required: true, message: 'The name cannot be empty', trigger: 'blur' }
+                    ],
+                    mail: [
+                        { required: true, message: 'Mailbox cannot be empty', trigger: 'blur' },
+                        { type: 'email', message: 'Incorrect email format', trigger: 'blur' }
+                    ],
+                    city: [
+                        { required: true, message: 'Please select the city', trigger: 'change' }
+                    ],
+                    gender: [
+                        { required: true, message: 'Please select gender', trigger: 'change' }
+                    ],
+                    interest: [
+                        { required: true, type: 'array', min: 1, message: 'Choose at least one hobby', trigger: 'change' },
+                        { type: 'array', max: 2, message: 'Choose two hobbies at best', trigger: 'change' }
+                    ],
+                    date: [
+                        { required: true, type: 'date', message: 'Please select the date', trigger: 'change' }
+                    ],
+                    time: [
+                        { required: true, type: 'string', message: 'Please select time', trigger: 'change' }
+                    ],
+                    desc: [
+                        { required: true, message: 'Please enter a personal introduction', trigger: 'blur' },
+                        { type: 'string', min: 20, message: 'Introduce no less than 20 words', trigger: 'blur' }
+                    ]
+                }
+            }
+        },
+        methods: {
+            handleSubmit (name) {
+                this.$refs[name].validate((valid) => {
+                    if (valid) {
+                        this.$Message.success('Success!');
+                    } else {
+                        this.$Message.error('Fail!');
+                    }
+                })
+            },
+            handleReset (name) {
+                this.$refs[name].resetFields();
+            }
+        }
+    }
+</script>
+
+以下不显示
+MyCircle| MyForm
