@@ -4950,6 +4950,68 @@ Vue纯净版开发环境(使用vue-cli@3创建)
 https://github.com/alex-guan/vue_base
 
 
+[root@dns ~]# more /app/sample/src/views/MyVueGn.vue 
+<template>
+  <div>
+    <drag-wrap class="wrap" :data="list" @watchData="watchData">
+      <drag-item class="item" v-for="(item, index) in list" :key="index">
+        <template #drag>
+          <div>拖拽Dom</div>
+        </template>
+        <div>{{item}}</div>
+      </drag-item>
+    </drag-wrap>
+    <img v-watermark="{src: src, text: 'hello world'}"/>
+
+    <countdown :time="date">
+      <template v-slot="{date}">
+        {{date.year}}年-{{date.month}}月-{{date.date}}日-{{date.hours}}小时-{{date.minutes}}分钟-{{date.seconds}}秒
+      </template>
+    </countdown>
+    <countdown isSMSMode :totalTime="timeLeft">
+      <template v-slot="{date}">{{date.timeLeft}}秒</template>
+    </countdown>
+  
+    <slide-check 
+      :width="300" 
+      :height="300" 
+      :src="src1" 
+      @success="success" 
+      @fail="fail">
+    </slide-check>
+    <check-in :checkIns="checkIns" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      list: [111, 222, 333, 444, 555, 666, 777, 888, 999],
+      src: require("./img/demo.jpg"),
+      date: "2022.11.11",
+      checkIns: ['2019-12-15', '2019.12.18', '2020.1.9', 1576250061182],
+      timeLeft: 60,
+      src1: [
+        require("./img/demo.jpg"),
+        require("./img/min.jpg")
+      ]
+    };
+  },
+  methods: {
+    watchData(newList) {
+      console.log("newList", newList);
+    },
+    success() {
+      alert("success");
+    },
+    fail() {
+      alert("fail");
+    }
+  }
+}
+</script>
+
 
 
 cd /app/gitrepo
