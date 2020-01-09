@@ -1352,3 +1352,3610 @@ yarn add  less-loader less
 
 以下不显示
 MyCircle| MyForm
+
+
+/app/sample/src/router/index.js:24:    component: () => import(/* webpackChunkName: "mytable" */ '../views/MyTable.vue')
+/app/sample/src/App.vue:6:      <router-link to="/mytable">MyTable</router-link>|
+
+
+
+import ElementUI from 'element-ui' //element-ui的全部组件
+import 'element-ui/lib/theme-chalk/index.css'//element-ui的css
+Vue.use(ElementUI) //使用elementUI
+
+vue add element
+
+lsof -i tcp:8080
+
+yum install lsof 
+
+了吗初始化
+[root@dns app]# mkdir elsample
+[root@dns app]# yarn global add @vue/cli-init
+[root@dns app]# vue init webpack elsample == error
+
+vue-cli-plugin-element
+vue create elsample
+cd elsample
+vue add element
+// yarn add element-ui 在上面的步骤中包括
+
+git clone https://github.com/ElementUI/element-starter.git
+
+main.js
+import Vue from 'vue';
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+import App from './App.vue';
+
+Vue.use(ElementUI);
+
+new Vue({
+  el: '#app',
+  render: h => h(App)
+});
+
+按需引入
+npm install babel-plugin-component -D
+
+import Vue from 'vue';
+import { Button } from 'element-ui';
+
+Vue.prototype.$ELEMENT = { size: 'small', zIndex: 3000 };
+Vue.use(Button);
+
+然后，将 .babelrc 修改为：
+
+{
+  "presets": [["es2015", { "modules": false }]],
+  "plugins": [
+    [
+      "component",
+      {
+        "libraryName": "element-ui",
+        "styleLibraryName": "theme-chalk"
+      }
+    ]
+  ]
+}
+
+在babel.config.js中进行配置（vue-cli3 中 没有.babelrc文件）
+
+plugins: [
+    ["@babel/plugin-transform-modules-commonjs", { "strictMode": false }]
+],
+
+国际化
+Element 组件内部默认使用中文，若希望使用其他语言，则需要进行多语言设置。以英文为例，在 main.js 中：
+
+// 完整引入 Element
+import Vue from 'vue'
+import ElementUI from 'element-ui'
+import locale from 'element-ui/lib/locale/lang/en'
+
+Vue.use(ElementUI, { locale })
+
+如果使用其它语言，默认情况下中文语言包依旧是被引入的，可以使用 webpack 的 NormalModuleReplacementPlugin 替换默认语言包。
+
+webpack.config.js
+
+{
+  plugins: [
+    new webpack.NormalModuleReplacementPlugin(/element-ui[\/\\]lib[\/\\]locale[\/\\]lang[\/\\]zh-CN/, 'element-ui/lib/locale/lang/en')
+  ]
+}
+
+yarn add element-theme-chalk
+
+<el-container style="height: 500px; border: 1px solid #eee">
+  <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
+    <el-menu :default-openeds="['1', '3']">
+      <el-submenu index="1">
+        <template slot="title"><i class="el-icon-message"></i>导航一</template>
+        <el-menu-item-group>
+          <template slot="title">分组一</template>
+          <el-menu-item index="1-1">选项1</el-menu-item>
+          <el-menu-item index="1-2">选项2</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="分组2">
+          <el-menu-item index="1-3">选项3</el-menu-item>
+        </el-menu-item-group>
+        <el-submenu index="1-4">
+          <template slot="title">选项4</template>
+          <el-menu-item index="1-4-1">选项4-1</el-menu-item>
+        </el-submenu>
+      </el-submenu>
+      <el-submenu index="2">
+        <template slot="title"><i class="el-icon-menu"></i>导航二</template>
+        <el-menu-item-group>
+          <template slot="title">分组一</template>
+          <el-menu-item index="2-1">选项1</el-menu-item>
+          <el-menu-item index="2-2">选项2</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="分组2">
+          <el-menu-item index="2-3">选项3</el-menu-item>
+        </el-menu-item-group>
+        <el-submenu index="2-4">
+          <template slot="title">选项4</template>
+          <el-menu-item index="2-4-1">选项4-1</el-menu-item>
+        </el-submenu>
+      </el-submenu>
+      <el-submenu index="3">
+        <template slot="title"><i class="el-icon-setting"></i>导航三</template>
+        <el-menu-item-group>
+          <template slot="title">分组一</template>
+          <el-menu-item index="3-1">选项1</el-menu-item>
+          <el-menu-item index="3-2">选项2</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="分组2">
+          <el-menu-item index="3-3">选项3</el-menu-item>
+        </el-menu-item-group>
+        <el-submenu index="3-4">
+          <template slot="title">选项4</template>
+          <el-menu-item index="3-4-1">选项4-1</el-menu-item>
+        </el-submenu>
+      </el-submenu>
+    </el-menu>
+  </el-aside>
+  
+  <el-container>
+    <el-header style="text-align: right; font-size: 12px">
+      <el-dropdown>
+        <i class="el-icon-setting" style="margin-right: 15px"></i>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item>查看</el-dropdown-item>
+          <el-dropdown-item>新增</el-dropdown-item>
+          <el-dropdown-item>删除</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <span>王小虎</span>
+    </el-header>
+    
+    <el-main>
+      <el-table :data="tableData">
+        <el-table-column prop="date" label="日期" width="140">
+        </el-table-column>
+        <el-table-column prop="name" label="姓名" width="120">
+        </el-table-column>
+        <el-table-column prop="address" label="地址">
+        </el-table-column>
+      </el-table>
+    </el-main>
+  </el-container>
+</el-container>
+
+<style>
+  .el-header {
+    background-color: #B3C0D1;
+    color: #333;
+    line-height: 60px;
+  }
+  
+  .el-aside {
+    color: #333;
+  }
+</style>
+
+<script>
+  export default {
+    data() {
+      const item = {
+        date: '2016-05-02',
+        name: '王小虎',
+        address: '上海市普陀区金沙江路 1518 弄'
+      };
+      return {
+        tableData: Array(20).fill(item)
+      }
+    }
+  };
+</script>
+
+
+<template>
+  <div>
+
+  </div>
+</template>
+
+
+
+[root@dns components]# ll | awk '{print $9}'
+Form.vue
+HelloWorld.vue
+Table.vue
+
+ESLint for of 报错：no-unused-vars
+
+<script>
+  export default {
+    data() {
+      return {
+        activeIndex: '1',
+        activeIndex2: '1'
+      };
+    },
+    methods: {
+       // handleSelect(key, keyPath) {
+         // console.log(key, keyPath);
+       // }
+    }
+  }
+</script>
+
+
+
+======================================
+旧版(vue cli2)安装及创建项目
+2.1 搭建vue的开发环境，安装脚手架工具
+$ npm install --global vue-cli
+
+2.2  创建项目 (cd到对应项目内部)
+2.2.1 创建项目 (完整结构)
+$ vue init webpack projectName
+
+2.2.2 创建项目(simple)
+$ vue init webpack-simple projectName
+
+2.3 运行项目
+$ cd  projectName 
+$ npm install
+$ npm run dev
+
+
+vue cli3安装及创建项目
+3.1 搭建vue的开发环境，安装脚手架工具
+$ npm install -g @vue/cli
+或者：
+$ yarn global add @vue/cli
+
+3.2 创建项目
+$ vue create projectName 
+
+3.3 运行项目
+$ npm run serve
+
+3.4 编译项目
+$ npm run build
+
+3.5 vue cli3 图形化界面创建项目
+$ vue ui
+
+四、项目目录结构分析
+4.1 vue cli2目录结构
+|-- build                            // 项目构建(webpack)相关代码
+|  |-- build.js                    // 生产环境构建代码
+|  |-- check-version.js            // 检查node、npm等版本
+|  |-- utils.js                    // 构建工具相关
+|  |-- vue-loader.conf.js          // webpack loader配置
+|  |-- webpack.base.conf.js        // webpack基础配置
+|  |-- webpack.dev.conf.js          // webpack开发环境配置,构建开发本地服务器
+|  |-- webpack.prod.conf.js        // webpack生产环境配置
+|-- config                          // 项目开发环境配置
+|  |-- dev.env.js                  // 开发环境变量
+|  |-- index.js                    // 项目一些配置变量
+|  |-- prod.env.js                  // 生产环境变量
+|-- src                              // 源码目录
+|  |-- components                  // vue公共组件
+|  |-- router                      // vue的路由管理
+|  |-- App.vue                      // 页面入口文件
+|  |-- main.js                      // 程序入口文件，加载各种公共组件
+|-- static                          // 静态文件，比如一些图片，json数据等
+|-- .babelrc                        // ES6语法编译配置
+|-- .editorconfig                    // 定义代码格式
+|-- .gitignore                      // git上传需要忽略的文件格式
+|-- .postcsssrc                      // postcss配置文件
+|-- README.md                        // 项目说明
+|-- index.html                      // 入口页面
+|-- package.json                    // 项目基本信息,包依赖信息等
+
+4.2 vue cli3 项目目录结构
+3.0的目录比2.0简洁了很多，没了build和config等目录。若需要其他配置则需要自己手动配置
+|-- src                              // 源码目录
+|  |-- components                  // vue公共组件
+|  |-- router                      // vue的路由管理
+|  |-- App.vue                      // 页面入口文件
+|  |-- main.js                      // 程序入口文件，加载各种公共组件
+|-- public                          // 静态文件，比如一些图片，json数据等
+|  |-- favicon.ico                      // 图标文件
+|  |-- index.html                      // 入口页面
+|-- vue.config.js                          // 是一个可选的配置文件，包含了大部分的vue项目配置
+|-- .babelrc                        // ES6语法编译配置
+|-- .editorconfig                    // 定义代码格式
+|-- .gitignore                      // git上传需要忽略的文件格式
+|-- .postcsssrc                      // postcss配置文件
+|-- README.md                        // 项目说明
+|-- package.json                    // 项目基本信息,包依赖信息等
+
+vue.config.js
+module.exports = {
+  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
+  outputDir: "dist",
+  assetsDir:"static",
+  indexPath:'index.html',
+  devServer: {
+    overlay: {
+      warnings: false,
+      errors: false
+    },
+    // 设置主机地址
+    host: 'localhost',
+    // 设置默认端口
+    port: 8080,
+    // 设置代理
+    proxy: {
+      '/api': {
+        // 目标 API 地址
+        target: 'http://192.168.124.231:8707/', // 接口的域名
+        // 如果要代理 websockets
+        ws: false,
+        // 将主机标头的原点更改为目标URL
+        changeOrigin: true
+      }
+    }
+  }
+}
+
+module.exports = {
+    /* 部署生产环境和开发环境下的URL：可对当前环境进行区分，baseUrl 从 Vue CLI 3.3 起已弃用，要使用publicPath */ 
+    /* baseUrl: process.env.NODE_ENV === 'production' ? './' : '/' */
+    publicPath: process.env.NODE_ENV === 'production' ? '/public/' : './',
+    /* 输出文件目录：在npm run build时，生成文件的目录名称 */
+    outputDir: 'dist',
+    /* 放置生成的静态资源 (js、css、img、fonts) 的 (相对于 outputDir 的) 目录 */
+    assetsDir: "assets",
+    /* 是否在构建生产包时生成 sourceMap 文件，false将提高构建速度 */
+    productionSourceMap: false,
+    /* 默认情况下，生成的静态资源在它们的文件名中包含了 hash 以便更好的控制缓存，你可以通过将这个选项设为 false 来关闭文件名哈希。(false的时候就是让原来的文件名不改变) */
+    filenameHashing: false,
+    /* 代码保存时进行eslint检测 */
+    lintOnSave: true,
+    /* webpack-dev-server 相关配置 */
+    devServer: {
+        /* 自动打开浏览器 */
+        open: true,
+        /* 设置为0.0.0.0则所有的地址均能访问 */
+        host: '0.0.0.0',
+        port: 8066,
+        https: false,
+        hotOnly: false,
+        /* 使用代理 */
+        proxy: {
+            '/api': {
+                /* 目标代理服务器地址 */
+                target: 'http://47.100.47.3/',
+                /* 允许跨域 */
+                changeOrigin: true,
+            },
+        },
+    },
+}
+
+https://cli.vuejs.org/zh/guide/prototyping.html
+
+yum -y install gcc+ gcc-c++
+yarn global add @vue/cli-service-global
+
+vue serve
+
+vue serve 使用了和 vue create 创建的项目相同的默认设置 (webpack、Babel、PostCSS 和 ESLint)。它会在当前目录自动推导入口文件——入口可以是 main.js、index.js、App.vue 或 app.vue 中的一个。你也可以显式地指定入口文件：
+
+vue serve MyComponent.vue
+如果需要，你还可以提供一个 index.html、package.json、安装并使用本地依赖、甚至通过相应的配置文件配置 Babel、PostCSS 和 ESLint。
+
+vue ui
+
+vue2.0实现底部导航切换效果
+ 使用vue2.0写移动端的时候，经常会写底部导航效果，点击切换路由效果，实现图片和文字颜色切换。vue2.0也提供了很多ul框架供我们实现效果，今天就用原生的实现一个底部导航切换，直接上代码：
+
+效果图
+路由搭建
+export default new Router({
+  routes: [
+    {
+      path: "/Home",
+      component: Home,
+    },
+    {
+      path: "/recommend",
+      component: Recommend
+    },
+    {
+      path: "/search",
+      component: Search
+    },
+    {
+      path: "/chat",
+      component: Chat
+    },
+    {
+      path: "/me",
+      component: Me
+    },
+　　{
+     path: '/',<br>     redirect: '/home'<br>   },
+  ]
+});
+
+页面模板搭建，src和on都要动态的绑定，使用三目运算判断每次点击切换
+<div class="bottom-tab">
+    <div class="tab-item" @click="switchTo('/home')">
+            <img :src="'/home' === $route.path ? tabBarImgArr[0].selected : tabBarImgArr[0].normal" alt="首页">
+            <span :class="{on: '/home' === $route.path}">首页</span>
+        </div>
+    <div class="tab-item" @click="switchTo('/recommend')">
+            <img :src="'/recommend' === $route.path ? tabBarImgArr[1].selected : tabBarImgArr[1].normal" alt="推荐">
+            <span :class="{on: '/recommend' === $route.path}">推荐</span>
+        </div>
+    <div class="tab-item" @click="switchTo('/search')">
+            <img :src="'/search' === $route.path ? tabBarImgArr[2].selected : tabBarImgArr[2].normal" alt="搜索">
+            <span :class="{on: '/search' === $route.path}">搜索</span>
+        </div>
+    <div class="tab-item" @click="switchTo('/chat')">
+            <img :src="'/chat' === $route.path ? tabBarImgArr[3].selected : tabBarImgArr[3].normal" alt="聊天">
+            <span :class="{on: '/chat' === $route.path}">聊天</span>
+        </div>
+    <div class="tab-item" @click="switchTo('/me')">
+            <img :src="'/me' === $route.path ? tabBarImgArr[4].selected : tabBarImgArr[4].normal" alt="我的">
+            <span :class="{on: '/me' === $route.path}">我的</span>
+        </div>
+  </div>
+
+在data里面定义tabBarImgArr:数组，用于存放图片。
+tabBarImgArr:[   //图片切换
+        {normal: require('./../../../static/img/icon_home.png'), selected: require('./../../../static/img/icon_home_selected.png')},
+        {normal: require('./../../../static/img/icon_intro.png'), selected: require('./../../../static/img/icon_intro_selected.png')},
+        {normal: require('./../../../static/img/icon_search.png'), selected: require('./../../../static/img/icon_search_selected.png')},
+        {normal: require('./../../../static/img/icon_chat.png'), selected: require('./../../../static/img/icon_chat_selected.png')},
+        {normal: require('./../../../static/img/icon_mine.png'), selected: require('./../../../static/img/icon_mine_selected.png')}
+      ]
+
+在methods实现switchTo切换
+
+methods:{
+    switchTo(path){
+      // console.log(this.$router)
+      this.$router.replace(path)
+    }
+}
+
+css样式效果
+.bottom-tab
+    width 100%
+    height 50px
+    background-color #fff
+    position fixed
+    left 0px
+    bottom 0px
+    display flex
+    z-index 999
+    .tab-item
+      display flex
+      flex 1
+      flex-direction column
+      align-items center
+      justify-content center
+      font-size 14px
+      color #666
+      img
+         width 35%
+         margin-bottom 2px
+      .on
+        color red
+
+如果打算将项目部署到 https://<USERNAME>.github.io/<REPO>/ 上 (即仓库地址为 https://github.com/<USERNAME>/<REPO>)，可将 publicPath 设为 "/<REPO>/"。举个例子，如果仓库名字为“my-project”，那么 vue.config.js 的内容应如下所示：
+
+module.exports = {
+  publicPath: process.env.NODE_ENV === 'production'
+    ? '/my-project/'
+    : '/'
+}
+
+<template>
+<Form ref="zq_formData" :model="zq_formData"
+<FormItem label="用户名：" prop="username" label-position="top">
+
+
+<script>
+ methods: {
+      getFormatList () {
+        getDemoList().then(res => {
+          this.userNameList = res.data.data;// 对应选择器 value和label
+        });
+      },
+      getListPage () {
+        this.listLoading = true;
+        getDemoListPage(this.zqListQuery).then(res => {
+          var records = res.data.data.records;
+          /*if (records.length > 0) {
+            for (var i = 0; i < records.length; i++) {
+              records[i].dateTime = new Date(records[i].dateTime);// TODO 处理时间格式化滴
+              //TODO 处理状态滴
+              if (records[i].state == 0){
+                records[i].state = "未处理";
+              }
+            }
+          }*/
+          this.list = records;
+          this.total = res.data.data.total;
+          this.listLoading = false
+        })
+      },
+      ok () {
+        this.$refs.zq_formData.validate(valid => {
+          if (valid) {
+            saveOrUpdateDemo(this.zq_formData)
+              .then(response => {
+                if (response.data.status == 1) {
+                  this.getListPage();
+                  this.$Notice.success({
+                    title: '成功',
+                    desc: '保存成功',
+                    duration: 2
+                  });
+                  this.drawer = false;
+                } else {
+                  this.$message({
+                    message: response.data.message,
+                    type: 'error'
+                  })
+                }
+              })
+              .catch(err => {
+                this.fetchSuccess = false;
+                console.log(err);
+              })
+          }
+        })
+      },
+
+
+
+
+import axios from '@/libs/api.request'
+
+
+export const getDemoListPage = (query) => {
+  return axios.request({
+    url: '/api/zhengqing/demo/listPage',
+    data: query,
+    method: 'post'
+  })
+};
+
+export const getDemoList = (query) => {
+  return axios.request({
+    url: '/api/zhengqing/demo/list',
+    data: query,
+    method: 'post'
+  })
+};
+
+
+export const saveOrUpdateDemo = (form) => {
+  return axios.request({
+    url: '/api/zhengqing/demo/save',
+    data: form,
+    method: 'post'
+  })
+};
+
+export const deleteDemo = (id) => {
+  return axios.request({
+    url: '/api/zhengqing/demo/delete',
+    data: id,
+    method: 'post'
+  })
+};
+
+vue导出功能
+1、第一种后台返回地址
+
+     exportData() {
+        exportDataDeal(this.form).then(data => {
+          if(data.status == 200){
+            this.download(data.request.responseURL);
+          }
+        });
+      },
+      download(url) {
+        var iframe = document.createElement("iframe")
+        iframe.style.display = "none";
+        iframe.src = url;
+        document.body.appendChild(iframe);
+      },
+2、后台返回的是流
+// 利用iframe 封装的方法
+//options这个对象里面有两个key,action和data
+
+action是地址 data 是接口需要的传参
+export const postDownLoadFile = function(options) {
+    let config = { method: 'post', ...options };
+    let $iframe = document.getElementById('down-file-iframe');
+    if (!$iframe) {
+        $iframe = document.createElement('iframe');
+    }
+    let $form = document.createElement('form');
+    $form.setAttribute('target', 'down-file-iframe');
+    $form.setAttribute('method', config.method);
+    $form.setAttribute('action', `${baseUrl[process.env.NODE_ENV]||""}/${config.action}`);
+    for (var key in config.data) {
+        let $input = document.createElement('input');
+        $input.setAttribute('type', 'hidden');
+        $input.setAttribute('name', key);
+        $input.setAttribute('value', config.data[key]);
+        $form.appendChild($input);
+    }
+    $iframe.appendChild($form);
+    document.body.appendChild($iframe);
+    $iframe.getElementsByTagName('form')[0].submit();
+    document.body.removeChild($iframe);
+}
+
+// 利用form
+
+<form :method="method || 'POST'" v-show="false" :action="url" id="hiddenForm" ref="hiddenForm" target="_blank">
+            <input type="text" v-for="item in params" :key="item.key" :name="item.key" :value="item.val" />
+            <input type="submit" value="提交">
+        </form>
+// 再调用它的submit方法就可以了
+// 直接用原生方法
+
+orderListInfo.exportInfo().then(response => {
+        if (response) {
+          const aLink = document.createElement('a')
+          const newfileName = response.headers['content-disposition'].split('=')[1]
+          let blob = new Blob([response.data], { type: 'application/vnd.ms-excel' })
+          aLink.href = URL.createObjectURL(blob)
+          aLink.setAttribute('download', `${newfileName}`)
+          aLink.click()
+          window.URL.revokeObjectURL(blob)
+        } else {
+          this.$message({ showClose: true, message: response.errMsg || '查询失败', type: 'warning' })
+        }
+      }).catch(error => {
+        console.log(error)
+      })
+
+
+[root@dns components]# more HelloWorld.vue 
+<template>
+  <div class="hello">
+    <h1>{{ msg }}</h1>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "HelloWorld",
+  props: {
+    msg: String
+  }
+};
+</script>
+
+<style scoped>
+h3 {
+  margin: 40px 0 0;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+a {
+  color: #42b983;
+}
+</style>
+
+
+
+在非 template/render 模式下（例如使用 CDN 引用时），组件名要分隔，例如 DatePicker 必须要写成 date-picker。
+
+以下组件，在非 template/render 模式下，需要加前缀 i-：
+
+Button: i-button
+Col: i-col
+Table: i-table
+Input: i-input
+Form: i-form
+Menu: i-menu
+Select: i-select
+Option: i-option
+Progress: i-progress
+Time: i-time
+以下组件，在所有模式下，必须加前缀 i-，除非使用 iview-loader：
+
+Switch: i-switch
+Circle: i-circle
+
+<script>
+	new Vue({
+
+这里的this指向的是new Vue这个对象。new Vue也可以写成var C=new Vue({}).所以这里的this指向的是C.
+
+'v-for' directives require that attribute value (vue/valid-v-for) 
+Parsing error: Line 1: Unexpected token, expected ";"
+Expected 'v-bind:key' directive to use the variables which are defined by the 'v-for' directive (vue/valid-v-for)
+Elements in iteration expect to have 'v-bind:key' directives (vue/require-v-for-key)
+
+[root@dns sample]# vue add axios
+
+[root@dns sample]# more src/main.js 
+import Vue from 'vue'
+import './plugins/axios'
+
+    getData() {
+      this.axios.get('/api/users', this.param)
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.code == 200) {
+	  this.data = res.data.data;
+	} else {
+          this.$message.error('获取内容失败!')
+        }
+      })
+    },
+
+git clone -b sim-operator https://github.com/Loong-T/demo.git
+
+https://github.com/Loong-T/demo/tree/sim-operator
+
+cat > .gitignore
+.DS_Store
+node_modules/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+[root@dns sample]# yarn upgrade
+yarn add global cordova
+
+promise与await
+https://www.jianshu.com/p/1902bc9be8e0
+
+vue生成二维码
+
+yarn add  qrcodejs2
+
+vue视频播放vue-video-player
+https://links.jianshu.com/go?to=https%3A%2F%2Fgithub.com%2Fsurmon-china%2Fvue-video-player
+yarn add  vue-video-player
+
+main.js
+
+
+import VideoPlayer from 'vue-video-player'
+require('video.js/dist/video-js.css')
+require('vue-video-player/src/custom-theme.css')
+
+Vue.use(VideoPlayer)
+
+
+<template>
+  <div class="app">
+        <video-player  class="video-player vjs-custom-skin"
+            ref="videoPlayer"
+            :playsinline="true"
+            :options="playerOptions"
+        ></video-player>
+  </div>
+</template>
+<script>
+export default {
+  name: 'BusImg',
+  data () {
+    return {
+      // 视频播放
+      playerOptions : {
+        playbackRates: [0.7, 1.0, 1.5, 2.0], //播放速度
+        autoplay: false, //如果true,浏览器准备好时开始回放。
+        muted: false, // 默认情况下将会消除任何音频。
+        loop: false, // 导致视频一结束就重新开始。
+        preload: 'auto', // 建议浏览器在<video>加载元素后是否应该开始下载视频数据。auto浏览器选择最佳行为,立即开始加载视频（如果浏览器支持）
+        language: 'zh-CN',
+        aspectRatio: '16:9', // 将播放器置于流畅模式，并在计算播放器的动态大小时使用该值。值应该代表一个比例 - 用冒号分隔的两个数字（例如"16:9"或"4:3"）
+        fluid: true, // 当true时，Video.js player将拥有流体大小。换句话说，它将按比例缩放以适应其容器。
+        sources: [{
+          type: "",
+          src: 'http://vjs.zencdn.net/v/oceans.mp4'//url地址          
+          // src: "" //url地址
+        }],
+        poster: "", //你的封面地址
+        // width: document.documentElement.clientWidth,
+        notSupportedMessage: '此视频暂无法播放，请稍后再试', //允许覆盖Video.js无法播放媒体源时显示的默认信息。
+        controlBar: {
+          timeDivider: true,
+          durationDisplay: true,
+          remainingTimeDisplay: false,
+          fullscreenToggle: true  //全屏按钮
+        }
+    }
+</script>
+
+
+支持格式
+其他格式可能需要额外实现
+
+type: "video/webm",
+type: "video/ogg",
+type: "video/3gp",
+type: "video/mp4",
+
+iView表格(table)渲染(render)
+https://www.jianshu.com/p/4c8028a198d6
+
+yarn add vue-cookie
+
+  created(){
+    this.handleRefresh(); //调用的方式
+  },
+
+
+validate
+
+      ruleValidate:{
+        name: [
+        {
+          required: true,
+          max: 5,
+          message: '不能为空且不超过5个字',
+          trigger: 'blur'
+        }
+        ]
+      },
+
+    handleSubmit(name) {
+      this.$refs[name].validate(valid => {
+        if (valid) {
+          this.$Message.success("Success!");
+        } else {
+          this.$Message.error("Fail!");
+        }
+      });
+    },
+
+
+
+=========================================================
+Vue中实现用户登录及token验证
+2019年6月4日 - by admin - 1 Comment
+Vue中实现token验证大致如下：
+1、第一次登录的时候，前端调后端的登陆接口，发送用户名和密码
+2、后端收到请求，验证用户名和密码，验证成功，就给前端返回一个token
+3、前端拿到token，将token存储到localStorage和vuex中，并跳转路由页面（本项目根据是否记住密码来判断token存储到sessionStorage或 localStorage ）
+4、前端每次跳转路由，就判断 localStroage 中有无 token ，没有就跳转到登录页面，有则跳转到对应路由页面
+5、每次调后端接口，都要在请求头中加token
+6、后端判断请求头中有无token，有token，就拿到token并验证token，验证成功就返回数据，验证失败（例如：token过期）就返回401，请求头中没有token也返回401
+7、如果前端拿到状态码为401，就清除token信息并跳转到登录页面
+
+login.vue
+调登录接口成功，在回调函数中将token存储到localStorage、sessionStorage和vuex中
+
+ methods: {
+            handleSubmit(e) {
+                e.preventDefault();
+                this.form.validateFields((err, values) => {
+                    if (!err) {
+                        this.$api.user.login(values
+                        ).then(res => {
+                            if (res.data.id_token) {
+                                this.$store.commit('login',{token:res.data.id_token,rememberMe:values.rememberMe});
+                                this.$store.dispatch('initAccount');
+                                this.$router.push('/home');
+                            }
+                        }).catch(()=>{
+                            this.$message.error('用户名或密码错误');
+                        })
+                    }
+                });
+            },
+        }
+store.js
+登录成功以及退出登录的token处理
+
+import Vuex from 'vuex';
+import Vue from 'vue';
+
+
+Vue.use(Vuex);
+export default new Vuex.Store({
+    state: {
+        token: null,
+    },
+    mutations: {
+        // 登录成功将, token保存在localStorage和sessionStorage中
+        login: (state, data) => {
+            if (data.rememberMe) {
+                localStorage.token = data.token;
+            } else {
+                sessionStorage.token = data.token;
+            }
+            state.token = data.token;
+        },
+        // 退出登录将, token清空
+        logout: (state) => {
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            state.token = null
+        },
+    }
+})
+http.js
+请求头部加token以及状态码处理
+
+/**
+ * 请求拦截器
+ * 每次请求前，如果存在token则在请求头中携带token
+ */
+instance.interceptors.request.use(
+    config => {
+        // 登录流程控制中，根据本地是否存在token判断用户的登录情况
+        // 但是即使token存在，也有可能token是过期的，所以在每次的请求头中携带token
+        // 后台根据携带的token判断用户的登录情况，并返回给我们对应的状态码
+        // 而后我们可以在响应拦截器中，根据状态码进行一些统一的操作。
+        if (store.state.token) {  // 判断是否存在token，如果存在的话，则每个http header都加上token
+            config.headers.Authorization = 'Bearer '+ `${store.state.token}`;
+        }
+        return config;
+    },
+    error => Promise.error(error));
+
+// 响应拦截器
+instance.interceptors.response.use(
+    // 请求成功
+    res => Promise.resolve(res),
+    // 请求失败
+    error => {
+        const { response } = error;
+        if (response) {
+            // 请求已发出，但是不在2xx的范围
+            errorHandle(response.status, response.data.message);
+            return Promise.reject(response);
+        } else {
+            // 处理断网的情况
+            // eg:请求超时或断网时，更新state的network状态
+            // network状态在app.vue中控制着一个全局的断网提示组件的显示隐藏
+            // 关于断网组件中的刷新重新获取数据，会在断网组件中说明
+        }
+    });
+/**
+ * 请求失败后的错误统一处理
+ * @param {Number} status 请求失败的状态码
+ */
+const errorHandle = (status, other) => {
+    // 状态码判断
+    switch (status) {
+        // 401: 未登录状态，跳转登录页
+        case 401:
+            toLogin();
+            break;
+        // 404请求不存在
+        case 404:
+            message.error('请求的资源不存在',5);
+            break;
+        default:
+            console.log(other);
+    }};
+
+================================================================================================================================
+NodeJS——Express Middleware : body-parser 与 req.body
+
+req.body : 返回post请求中包含的数据，默认是 undefined，需要用body-parser进行解析。
+
+post方法4种常见 Content-Type：
+application/www-form-urlencoded : 常用的表单发包方式
+multipart/form-data： 发送文件
+application/json : 用json格式发送数据（text/plain 将string转成json）
+text/xml ： 用xml格式发送数据（WeChat）
+
+body-parser中提供4种解析方式
+
+bodyParser.json(options) //
+bodyParser.raw(options) //解析二进制格式（buffer流数据）
+bodyParser.text(options) //解析文本数据
+bodyParser.urlencoded(options) //解析utf-8的编码的数据
+options可选值中常用extended:当设置为false时，会使用querystring库解析URL编码的数据，键值对中值为String或Array；当设置true时（默认），会使用qs库解析URL编码的数据，键值对的值为任何数据类型。
+
+eg:
+var express = require('express');
+var bodyParser = require('body-parser');
+var app = express();
+var jsonParser = bodyParser.json();
+var urlencodedParser = bodyParser.urlencoded({extended:false});
+app.post('/home',urlencodedParser, function(req, res) {
+    if(!req.body) return res.sendStatus(400);
+    res.send('Welcome ' + req.body.username);
+});
+app.post('/about',jsonParser, function(req, res) {
+    if(!req.body) return res.sendStatus(400);
+    res.send('Welcome ~ ' + req.body.username);
+})
+app.listen(3000);
+
+
+DBConfig.js
+module.exports =
+ {  
+             mysql: {   
+                         host: '127.0.0.1',     
+                         user: 'root',   
+                         password: '你的数据库Coonection密码',  
+                         database:'ExpressDB', // 前面建的user表位于这个数据库中 
+                          port: 3306  
+                    }
+ };
+
+usersql.js
+var UserSQL = {  
+                insert:'INSERT INTO User(uid,userName) VALUES(?,?)', 
+                queryAll:'SELECT * FROM User',  
+                getUserById:'SELECT * FROM User WHERE uid = ? ',
+              };
+ module.exports = UserSQL;
+
+ users.js 
+ var express = require('express');
+var router = express.Router();
+// 导入MySQL模块
+var mysql = require('mysql');
+var dbConfig = require('../db/DBConfig');
+var userSQL = require('../db/Usersql');
+// 使用DBConfig.js的配置信息创建一个MySQL连接池
+var pool = mysql.createPool( dbConfig.mysql );
+// 响应一个JSON数据
+var responseJSON = function (res, ret) {
+     if(typeof ret === 'undefined') { 
+          res.json({     code:'-200',     msg: '操作失败'   
+        }); 
+    } else { 
+      res.json(ret); 
+  }};
+// 添加用户
+router.get('/addUser', function(req, res, next){
+ // 从连接池获取连接 
+pool.getConnection(function(err, connection) { 
+// 获取前台页面传过来的参数  
+ var param = req.query || req.params;   
+// 建立连接 增加一个用户信息 
+connection.query(userSQL.insert, [param.uid,param.name], function(err, result) {
+        if(result) {      
+             result = {   
+                      code: 200,   
+                     msg:'增加成功'
+             };  
+        }     
+ 
+     // 以json形式，把操作结果返回给前台页面     
+       responseJSON(res, result);   
+ 
+     // 释放连接  
+      connection.release();  
+ 
+       });
+    });
+ });
+module.exports = router;
+
+=========设计运行虚拟目录========================
+[root@dns sample]# more vue.config.js 
+module.exports = {
+  runtimeCompiler: true,
+  // publicPath: process.env.NODE_ENV === 'production' ? '/public/' : './',
+  publicPath: '/public/',
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      }
+    }
+  }
+}
+
+[root@dns nginx]# more /etc/nginx/nginx.conf
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        location / {
+        }
+
+        location /public {
+          alias /app/sample/dist;
+          index index.html;
+        }
+
+2.vue-cli2.x
+找到config/index.js文件
+build: {
+  assetsPublicPath: '/public/',
+}
+
+vue之使用iview插件实现列表展示或table展示
+https://blog.csdn.net/Charles_Tian/article/details/81980409
+
+
+
+ES6箭头函数
+多条语句必须加大括号
+
+let sum = (num1, num2) => {
+    let res = num1 + num2;
+    return res;
+};
+// 相当于
+let sum = function (num1, num2) {
+    let res = num1 + num2;
+    return res;
+}
+返回对象需要用小括号包起来，与函数体区分。
+
+
+let person = (name) => ({ name: name, age: 18 });
+// 相当于
+let person = function (name) {
+    return {
+        name: name,
+        age: 18
+    };
+}
+this指向
+箭头函数中没有this绑定，必须通过查找作用域链来决定其值。
+如果箭头函数被非箭头函数包含，this绑定的是最近一层非箭头函数的this。否则，this的值会被设置为全局对象。
+不能通过call、apply、bind方法改变this的值。
+
+==============axios安装、使用和配置=============================
+二、使用
+get
+方式一
+
+axios.get('/user?id=12345')
+    .then((res) =>  {
+        console.log(res)
+    }).catch((error) => {
+        console.log(error);
+    })
+方式二
+
+let params = { id: 12345 }
+axios.get('/user', { params })
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+post
+1、Content-Type: application/json
+let params = { id: 12345 }
+axios.post('/user', params)
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+2、Content-Type: application/x-www-form-urlencoded
+需要设置Content-Type，可以单独提取一个文件配置，也可以在main.js里配置
+http.js
+
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+main.js
+
+import axios from 'axios';
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+Vue.prototype.$axios = axios;
+方式一 qs
+
+// { id: 12345, age: 18 } 序列化为 id=12345&age=18
+在main.js中引入
+
+import qs from 'qs';
+Vue.prototype.$qs = qs;
+在组件中调用
+
+let params = { id: 12345 }
+let postData = this.$qs.stringify(params);
+axios.post('/user', postData)
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+方式二 URLSearchParams
+局限性：IE不兼容
+在组件中调用
+
+let postData = new URLSearchParams();
+postData.append('id', '12345');  
+axios.post('/user', postData)
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+3、Content-Type: multipart/form-data
+formData
+在组件中调用
+
+let formData = new FormData();
+formData.append('id','12345');
+axios.post('/user', formData)
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+put
+方式一
+字符串拼接多个参数
+
+axios.put('/user?id=12345&name=lee')
+    .then((res) =>  {
+        console.log(res)
+    }).catch((error) => {
+        console.log(error);
+    })
+方式二
+调用方式同post，这种方式不生效时，与后台沟通，需要后台做配置。
+在main.js中引入
+
+import qs from 'qs';
+Vue.prototype.$qs = qs;
+在组件中调用
+
+let params = { id: 12345 }
+let putData = this.$qs.stringify(params);
+axios.post('/user', putData)
+    .then((res) => {
+        console.log(res);
+    }).catch((error) => {
+        console.log(error);
+    })
+delete
+同get请求
+
+axios.all()
+批量发送请求，等所有请求都有返回时，再执行统一的回调。
+
+
+getOne () {
+  return axios.get('/one');
+},
+getTwo () {
+  return axios.get('/two');
+},
+axios.all([this.getOne(), this.getTwo()])
+  .then(axios.spread((one, two) => {
+    console.log('one', one)
+    console.log('two', two)
+  }));
+
+vue-cli3项目使用vw实现移动端适配
+https://links.jianshu.com/go?to=https%3A%2F%2Fgithub.com%2FSmaVivian%2Fvue-cli3-h5-init.git
+
+FormData使用
+语法
+// 创建
+let formdata = new FormData();
+// 追加数据
+formdata.append("name", "lee");
+// 读取值
+console.log( formdata.get("name") ); // lee
+// 设置值
+formdata.set("name", "fly");
+console.log( formdata.get("name") ); // fly
+
+PC端自适应
+1920设计稿
+app.vue
+
+beforeCreate() {    
+  var whdef = 100 / 1920 // 表示1920的设计图,使用100PX的默认值
+  var wH = window.innerHeight // 当前窗口的高度
+  var wW = window.innerWidth // 当前窗口的宽度
+  var rem = wW * whdef // 以默认比例值乘以当前窗口宽度,得到该宽度下的相应FONT-SIZE值
+  var fontSize = rem < 80 ? 80 : rem > 100 ? 100 : rem
+  document.documentElement.style.fontSize = fontSize + 'px'
+  window.onresize = function () {
+    var whdef = 100 / 1920 // 表示1920的设计图,使用100PX的默认值
+    var wH = window.innerHeight // 当前窗口的高度
+    var wW = window.innerWidth // 当前窗口的宽度
+    var rem = wW * whdef // 以默认比例值乘以当前窗口宽度,得到该宽度下的相应FONT-SIZE值
+
+    var fontSize = rem < 80 ? 80 : rem > 100 ? 100 : rem
+    document.documentElement.style.fontSize = fontSize + 'px'
+  }
+},
+浏览器查看效果
+1、使用F12打开控制台，切换到移动端浏览方式
+2、在机型切换选项里选择edit...
+3、选择Add custom device
+4、填写名称、分辨率，比如1920X1080,1920,1080
+5、有一个选项为Mobile，可以选择为Desktop，选不选都可以
+6、之后就可以切换分辨率，查看PC不同分辨率的效果了
+7、参考数值：1920X1080、1600X1200、1366X768
+
+===============================
+区分IOS和Android
+
+代码
+utils - checkVersion.js
+
+function checkSystemVersion () {
+    if(typeof window === 'undefined')  return false;
+    // window环境操作系统区分
+    let systemInfo = window.navigator.userAgent,
+        result = {};
+    /Android/i.test(systemInfo) ? result.isAndroid = true : result.isAndroid = false;
+    /iphone|ipad/i.test(systemInfo) ? result.isIOS = true : result.isIOS = false;
+    return result;
+}
+export default checkSystemVersion
+
+使用
+<div v-show='checkVersion.isAndroid'>Android</div>
+<div v-show='checkVersion.isIOS'>IOS</div>
+<div :class="[{ 'androidClass': checkVersion.isAndroid }, { 'iphoneClass': checkVersion.isIOS }]"></div>
+// 样式
+.androidClass {}
+.iphoneClass {}
+
+
+import checkSystemVersion from '@/utils/checkVersion'
+
+data() {
+    return {
+        checkVersion:null,
+    }
+},
+created() {
+    this.checkVersion = checkSystemVersion();
+    alert(JSON.stringify(this.checkVersion));
+},
+
+
+vue组件使用v-model
+
+v-model
+在自定义的组将直接绑定父组件中的数据变量，在自定义组件中将需要绑定的值发送给v-model绑定的变量。
+
+<div id='app'>
+    <p>{{total}}</p>
+    <my-component v-model="total"></my-component>
+</div>
+
+<script>
+    Vue.component('my-component', {
+        template: '<button @click="handleClick"> +1 </button>',
+        data: function () {
+            return {
+                counter: 0
+            }
+        },
+        methods: {
+            handleClick: function () {
+                this.counter++;
+                this.$emit('input', this.counter);
+            }
+        }
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            total: 0
+        }
+    })
+</script>
+原理
+默认实现了@input='handle'的事件，以v-model代替
+
+<div id='app'>
+    <p>{{total}}</p>
+    <my-component @input="handleGetTotal"></my-component>
+</div>
+
+<script>
+    // ...组件代码
+    var app = new Vue({
+        el: '#app',
+        data: {
+            total: 0
+        },
+        methods: {
+            handleGetTotal: function (total) {
+                this.total = total
+            }
+        }
+    })
+</script>
+数据双向绑定
+在自定义组件中接收value属性，当有新的值时，传递到绑定的v-model
+
+<div id='app'>
+    <p>{{total}}</p>
+    <my-component v-model="total"></my-component>
+    <button @click="handelReduce"> -1 </button>
+</div>
+
+<script>
+    Vue.component('my-component', {
+        props: ['value'],
+        template: '<input :value="value" @input="updateValue" />',
+        methods: {
+            updateValue: function (event) {        
+                this.$emit('input', event.target.value);
+            }
+        }
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            total: 0
+        },
+        methods: {
+            handelReduce: function () {
+                this.total--;
+            }
+        }
+    })
+</script>
+以modal为例，一般在data中创建value的副本，在watch中监听，当改变后同步到v-modal
+
+<template>
+  <div class="modal" :value="value" v-show="visible">
+      <div class="close" @click="cancel">X</div>
+  </div>
+</template>
+ 
+<script>
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      default:false
+    }
+  }, 
+  data () {
+    return {
+      visible:false
+    }
+  },
+  watch: {
+      value(val) {
+        this.visible = val;
+      },
+      visible(val) {
+        this.$emit('input', val);
+      }
+  },
+  methods: {
+    cancel(){
+      this.visible = false;
+    }
+  },
+  mounted() {
+    if (this.value) {
+      this.visible = true;
+    }
+  }
+}
+</script>
+<modal v-model="isShow"></modal>
+
+export default {
+  name: 'app',
+  data () {
+    return {
+      isShow:false
+    }
+  }
+}
+</script>
+另一种写法
+我觉得相当于重命名了value和input
+
+
+<template>
+  <div class="modal" :value="renameValue" v-show="visible">
+      <div class="close" @click="cancel">X</div>
+  </div>
+</template>
+ 
+<script>
+export default {
+  model: {
+      prop: 'renameValue',
+      event: 'renameInput'
+  },
+  props: {
+    renameValue: {
+      type: Boolean,
+      default: false
+    }
+  }, 
+  data () {
+    return {
+      visible:false
+    }
+  },
+  watch: {
+      renameValue(val) {
+        this.visible = val;
+      },
+      visible(val) {
+        this.$emit('renameInput', val);
+      }
+  },
+  methods: {
+    cancel(){
+      this.visible = false;
+    }
+  },
+  mounted() {
+    if (this.renameValue) {
+      this.visible = true;
+    }
+  }
+}
+</script>
+
+吸顶效果
+html:
+
+<div id="app">
+  <div class="header">Header</div>
+  <ul class="nav" :class="isFixed==true?'is-fixed':''">
+    <li @click="change('one')" :class="flag=='one'?'active':''">title One</li>
+    <li @click="change('two')" :class="flag=='two'?'active':''">title Two</li>
+    <li @click="change('three')" :class="flag=='three'?'active':''">title Three</li>
+  </ul>
+  <div class="model" id="one">model One</div>
+  <div class="model" id="two">model Two</div>
+  <div class="model" id="three">model Three</div>
+</div>
+css:
+
+* {
+    padding: 0;
+    margin: 0;
+}
+#app {
+    width: 1000px;
+    margin: 0 auto;
+}
+.header, .model {
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    height: 300px;
+    line-height: 300px;
+    text-align: center;
+}
+.model {
+    height: 500px;
+    line-height: 500px;
+}
+.nav {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #eee;
+    overflow: hidden;
+}
+.nav li {
+    list-style: none;
+    width: 33.25%;
+    float: left;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    cursor: pointer;
+    border-right: 1px solid #eee;
+}
+.nav li:last-child {
+    border-right: none;
+}
+.active{
+    background: #FF7D41;
+    color: #FFFFFF;
+}
+.is-fixed{
+    position: fixed;
+    top: 0;
+    z-index: 9;
+    width: 1000px;
+}
+js:
+
+
+<script src="https://cdn.bootcss.com/vue/2.2.2/vue.min.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            flag: 'one',
+            isFixed: false
+        },
+        methods:{
+            change:function(id){
+                this.flag=id;
+            },
+            handleScroll () {  
+                let windowScrollY = window.scrollY;  
+                if (windowScrollY > 300) {  
+                    this.isFixed = true;  
+                } else {  
+                    this.isFixed = false;  
+                }  
+            }
+        },
+        mounted () {
+            window.addEventListener('scroll', this.handleScroll);
+        },
+        destroyed () {
+            window.removeEventListener('scroll', this.handleScroll);
+        }
+    })
+</script>
+
+轮播图
+
+lesdom
+0.044
+2018.08.01 00:18:30
+字数 127
+阅读 127
+Vue
+缩略图控制循环（级联）
+1.npm安装vue-awesome-swiper
+
+npm install vue-awesome-swiper --save
+2.全局挂载，在main.js中添加
+
+import VueAwesomeSwiper from 'vue-awesome-swiper'
+import 'swiper/dist/css/swiper.css'
+Vue.use(VueAwesomeSwiper)
+3.组件内复制修改代码
+缩略图控制循环
+4.修改样式和配置
+
+direction: 'vertical',
+封装全屏轮播图
+<template>
+  <div class="banner-self">
+    <swiper :options="swiperOption" class="swiper-box" ref="mySwiper">
+        <swiper-slide class="swiper-item" v-for="item in bannerList" :key='item.id'>
+            <div class="banner" :style="{
+                backgroundImage: 'url(' + item.pcBannerImg + ')'
+            }">
+            </div>
+        </swiper-slide>                        
+    </swiper>
+    <!-- <div class="banner" :style="style"></div> -->
+    <div class="circle">            
+        <p class="title_ch">{{titleCh}}</p>
+        <p class="title_bar"></p>
+        <p class="title_en">{{titleEn}}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from "@/api/api"
+export default {
+  name: 'bannerSelf',
+  data () {
+    return {
+        bannerList: [],
+        swiper: null,
+        swiperOption: {
+            direction: 'horizontal',
+            slidesPerView: 1,
+            spaceBetween: 0,
+            mousewheel: false,
+            autoHeight: false,
+            resistanceRatio: 0,
+            on: {
+                slideChangeTransitionEnd: function () {
+                    // alert(this.activeIndex);//切换结束时，告诉我现在是第几个slide
+                },
+            },
+        }
+    }
+  }, 
+    props: {
+        imgUrl: {
+          type: String,
+          required: true,          
+        }, 
+        titleCh: {
+          type: String,
+          default: '中文'        
+        },
+        titleEn: {
+          type: String,
+          default: 'ENHLISH'        
+        }, 
+        bannerType: {
+            type: Number,
+            default: 0,
+            // required: true, 
+        },    
+    },
+    methods: {
+        getBannerList() {            
+            const params = {
+                bannerType: this.bannerType
+            }
+            api.home.banner(params).then(res => {                            
+                if (res.status == 200) {
+                    this.bannerList = res.data                    
+                }
+            })            
+        },
+    },
+    computed: {
+        style() {
+            return {
+                backgroundImage: 'url(' + this.imgUrl + ')'
+            }
+        },
+        // bannerList () {
+        //     return [
+        //         {
+        //             pcBannerImg: this.imgUrl
+        //         },
+        //         {
+        //             pcBannerImg: this.imgUrl
+        //         },
+        //     ]
+        // }
+    },
+    watch: {
+        bannerType: {
+            handler (newValue, oldValue) {
+    　　　　　　if (newValue) {                    
+                    this.getBannerList()
+                }
+    　　　　 },
+            immediate: true
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.banner-self {
+    width: 100%;
+    height: 100%;
+}
+.swiper-box {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+.banner {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+.circle {
+    display: inline-block;
+    width: 6.8rem;
+    height: 6.8rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto;
+    text-align: center;
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 3px solid hsla(0,0%,100%,.4);
+    .title_ch {
+        margin-top: 1.9rem;
+        font-size: 0.72rem;
+        color: #ffffff;
+    }
+    .title_en {
+        font-size: 0.4rem;
+        color: #ffffff;
+    }
+    .title_bar {
+        margin: 0.34rem auto;
+        width: 3.6rem;
+        height: 2px;
+        background-color: #fff;
+        opacity: 0.67;
+    }
+}
+</style>
+轮播图和其他区域联动
+
+<template>
+    <div class="container clearfix">
+        <div class="main-left fl">
+            <swiper :options="swiperOption" class="swiper-box" ref="mySwiper">
+                <swiper-slide class="swiper-item" v-for="item in newsList" :key='item.id'>
+                    <div class="banner" :style="{
+                        backgroundImage: 'url(' + item.thumbnail + ')'
+                    }">
+                    </div>
+                </swiper-slide>                        
+            </swiper>
+        </div>
+        <div class="main-right fr">
+            <div class="main-content">
+                <h2 class="page-tilte">新闻资讯</h2>
+                <h3 class="page-subtilte">NEWS</h3>
+                <ul @mouseover="slideStop" @mouseout="slideStart">
+                    <li class="item" v-for="(item, index) in newsList" :key="item.id">
+                        <h3 class="article-title" :class="slideIndex === index?'article-title-active':''" @click="toDetail(item.id)" @mouseover="changeSlide(index)">{{item.articleTitle}}</h3>                        
+                        <div class="bottom clearfix">
+                            <span class="time fl">{{item.updateTime}}</span>
+                            <a class="fr to-detail" @click="toDetail(item.id)">查看详情</a>
+                        </div>
+                    </li>                    
+                </ul>     
+                <span class="more" @click="toList">更多&gt;</span>                           
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import api from "@/api/api"
+import allIcon from '@/utils/local-img'
+export default {
+    data() {
+        return {
+            allIcon: allIcon,
+            newsList: [],
+            slideIndex: 0,
+            // swiper: null,
+            swiperOption: {}
+        }
+    },
+    created () {
+        this.initSlide()
+        this.getNewsList()        
+    },
+    methods: {
+        // 获取列表
+        getNewsList () {
+            api.home.newsList().then(res => {
+                if (res.status == 200) {
+                    res.data.list.forEach((item) => {
+                        item.updateTime = this.$moment(item.updateTime).format('YYYY/MM/DD')
+                    })
+                    this.newsList = res.data.list
+                }
+            })            
+        },
+        // 跳转新闻
+        toList () {
+            this.$router.push({
+                path: '/news',                          
+            })
+        },
+        toDetail (id) {
+           this.$router.push({
+                path: '/newsDetail',
+                query: {
+                    id: id
+                }                
+            }) 
+        },
+        /**
+         * @desc 轮播图-----------------------------------------
+         */
+        // 初始化
+        initSlide () {
+            let that = this
+            that.swiperOption = {
+                autoplay: {
+                    delay: 1500,
+                    stopOnLastSlide: false,
+                    disableOnInteraction: true,
+                },
+                direction: 'horizontal',
+                slidesPerView: 1,
+                spaceBetween: 0,
+                mousewheel: false,
+                autoHeight: false,
+                resistanceRatio: 0,
+                on: {                    
+                    slideChangeTransitionEnd: function () {
+                        // alert(this.activeIndex);//切换结束时，告诉我现在是第几个slide
+                        that.slideIndex = this.activeIndex
+                    },
+                },
+            }
+        },
+        // 改变轮播
+        changeSlide (index) {            
+            this.swiper.slideTo(index, 1000, false)
+        },
+        // 自动轮播暂停
+        slideStop () {
+            this.swiper.autoplay.stop();
+        },
+        // 自动轮播开启
+        slideStart () {
+            this.swiper.autoplay.start();
+        },
+    },    
+    computed: {
+        swiper () {
+            return this.$refs.mySwiper.swiper
+        },
+        style() {
+            return {
+                backgroundImage: 'url(' + allIcon.home.news + ')'
+            }
+        }
+    }
+}
+</script>
+<style lang="less" scoped>
+// 左右布局
+.main-left {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+.container {
+  height: 100%;
+  overflow: hidden;
+}
+.main-left {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+.main-right {
+  width: 50%;
+  display: flex;  
+//   align-items: center;
+//   justify-content: center;
+}
+// 主体内容
+.main-content {
+    position: relative;
+    width: 100%;  
+    // height: 5rem;  
+    padding: 1.4rem 2rem 0 1.4rem;
+    // padding-top: 1.5rem;
+}
+.page-tilte {  
+  font-size: 0.34rem;
+  color: #333;  
+//   font-weight: bold;  
+}
+.page-subtilte {
+    font-size: 0.2rem;
+    color: #c4c4c4;  
+    margin-bottom: 0.4rem;
+}
+// 列表项
+.item {
+    margin-bottom: 0.3rem;
+}
+.article-title {  
+    cursor: pointer;
+    font-size: 0.2rem;
+    color: #686868;  
+    line-height: 0.3rem;
+    // margin-bottom: 5px;
+    text-align: justify;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover {
+        color: #FF7D41;
+    }
+}
+.article-title-active {
+    color: #FF7D41;
+}
+
+.bottom {  
+  font-size: 0.14rem;
+  color: #b3b3b3;  
+  line-height: 0.3rem;
+}
+// .time {
+//     font-size:12px;
+// }
+.to-detail {
+  color: #FF7D41;
+}
+// 更多
+.more {  
+    cursor: pointer;
+    position: absolute;
+    font-size: 0.18rem;
+    color: #FF7D41; 
+    top: 1.2rem;
+    right: 2rem; 
+}
+
+.swiper-box {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+.banner {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+</style>
+
+https://links.jianshu.com/go?to=https%3A%2F%2Fsurmon-china.github.io%2Fvue-awesome-swiper%2F
+https://links.jianshu.com/go?to=https%3A%2F%2Fgithub.com%2Fsurmon-china%2Fvue-awesome-swiper
+
+切换显示和隐藏
+vue
+html:
+
+<div id="app">
+    <div class="box">
+        <div class="left">
+            <p @click="toggleOne" v-if="showOne">隐藏</p>
+            <p @click="toggleOne" v-else>显示</p>            
+        </div>
+        <div class="right">
+            <div class="content" v-show="showOne">内容一</div>
+        </div>
+    </div>
+    <div class="box">
+        <div class="left">
+            <p @click="toggleTwo" v-show="showTwo">隐藏</p>
+            <p @click="toggleTwo" v-show="showTwo==false">显示</p>            
+        </div>
+        <div class="right">
+            <div class="content" v-show="showTwo">内容二</div>
+        </div>
+    </div>
+    <div class="box">
+        <div class="left">
+            <p @click="toggleThree">{{toggleThreeText}}</p>           
+        </div>
+        <div class="right">
+            <div class="content" v-show="showThree">内容三</div>
+        </div>
+    </div>
+</div>
+css:
+
+* {
+    padding: 0;
+    margin: 0;
+}
+#app {
+    width: 1000px;
+    margin: 0 auto;
+}
+.box {
+    height: 100px;
+    margin: 10px 0;
+}
+.left {
+    float: left;
+    width: 10%;
+    height: 100px;
+    background-color: #333;
+    cursor: pointer;
+}
+.right {
+    float: right;
+    width: 90%;
+    height: 100px;
+    background-color: #ccc;
+}
+.left p {
+    height: 100px;
+    line-height: 100px;
+    text-align: center;
+    color: #eee;
+}
+.right .content {
+    height: 100px;
+    line-height: 100px;
+    text-align: center;
+    background-color:salmon;
+}
+js:
+
+<script src="https://cdn.bootcss.com/vue/2.2.2/vue.min.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            showOne: true,
+            showTwo: true,
+            showThree: true,
+            toggleThreeText: '隐藏'
+        },
+        methods:{
+            toggleOne: function () {
+                this.showOne = !this.showOne;
+            },
+            toggleTwo: function () {
+                this.showTwo = !this.showTwo;
+            },
+            toggleThree: function () {
+                if (this.toggleThreeText === '隐藏') {
+                    this.toggleThreeText = '显示'
+                } else {
+                    this.toggleThreeText = '隐藏'
+                }
+                this.showThree = !this.showThree;
+            }
+        }
+    })
+</script>
+总结
+设计到显示和隐藏的问题，都可以通过一个开关变量来控制切换。
+
+
+vue设置页面标题title
+
+每个页面设置不同标题
+router - index.js
+const router = new Router({
+    mode: 'history',
+    routes: [
+        {
+            path: '/index',
+            name: 'index',
+            component: Index,
+            meta:{
+                // 页面标题title
+                title: '首页'
+            }
+        },
+        {
+            path: '/content',
+            name: 'content',
+            component: Content,
+            meta:{
+                title: '内容'
+            }
+        }
+    ]
+})
+export default router
+main.js
+
+import router from './router'
+router.beforeEach((to, from, next) => {
+  /* 路由发生变化修改页面title */
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+  next()
+})
+
+vue导入导出Excel文件
+html
+
+<Spin fix v-show="isSpinShow">
+    <Icon type="load-c" size="30" class="demo-spin-icon-load"></Icon>
+    <div>Loading...</div>
+</Spin>
+<div @click="handleExport">下载</div>
+js
+
+
+data () {
+    return {
+        isSpinShow: false,
+    }
+}, 
+methods: {
+    handleExport () {
+        this.isSpinShow = true
+        const params = {
+            // 导出数据列表时的参数
+        }
+        axios.get('/export', { params }).then((res) => {
+            if (res.status === 200) {
+                location.href = res.request.responseURL
+                setTimeout(() => {
+                    this.isSpinShow = false
+                }, 1000)
+            }            
+        }).catch(() => {
+            this.isSpinShow = false
+        })       
+    }
+} 
+
+vue回车触发事件（提交表单，刷新列表等）
+回车登录
+原理：就是监听键盘事件，当按键为回车时触发相应的函数
+代码：在输入框上面都加上@keyup.enter.native="handleMethod"
+解释：为什么要加上native？
+　　　写在一个封装好的组件上就需要加，给组件绑定原生事件采用的方法
+　　　写在一个input标签上就不需要加
+示例：
+html:
+
+<Form ref="loginForm" :model="formInline" :rules="ruleInline">
+    <FormItem prop="user">
+        <Input @keyup.enter.native="handleSubmit" v-model="formInline.user" placeholder="请输入用户名">
+            <span slot="prepend"><Icon :size="16" type="person"></Icon></span>
+        </Input>
+    </FormItem>
+    <FormItem prop="password">
+        <Input @keyup.enter.native="handleSubmit" type="password" v-model="formInline.password" placeholder="请输入密码">
+            <span slot="prepend"><Icon :size="14" type="locked"></Icon></span>
+        </Input>
+    </FormItem>
+    <FormItem prop="code">
+        <Input @keyup.enter.native="handleSubmit" v-model="formInline.code" placeholder="请输入验证码" style="width: 150px"/>
+        <img :src="imgUrl" alt="" @click="getValidateCode" ref="validateCode" class="validateCode">
+    </FormItem>
+    <FormItem>
+        <Button @click="handleSubmit" type="primary" :disabled="isDisabled" long>登录</Button>
+    </FormItem>
+</Form>
+js:
+
+
+methods: {
+    // 登录调用的方法
+    handleSubmit () {
+        // 验证及验证之后的跳转        
+    }
+} 
+
+
+
+vue路由跳转打开新窗口
+需求
+因为某些原因，某个页面的加载需要很长时间。为了不让用户重新加载，再次等待很长时间，决定当从这个页面跳转其他页面时，打开一个新窗口。
+
+编程时导航
+使用路由对象的resolve方法解析路由，可以得到location、router、href等目标路由的信息。得到href就可以使用window.open开新窗口了。
+
+当页面有一个跳转时
+const { href } = this.$router.resolve({
+    name: "router-name",
+    query: {
+        id: 1
+    }
+});
+window.open(href, '_blank');
+当页面有多个跳转时
+let routeOne = this.$router.resolve({
+    name: "router-one",
+    query: {
+        id: 1
+    }
+ });
+ window.open(routeOne.href, '_blank');
+
+ let routeTwo = this.$router.resolve({
+    name: "router-two",
+    query: {
+        id: 1
+    }
+ });
+ window.open(routeTwo.href, '_blank');
+<router-link>标签
+<router-link tag="a" 
+             target="_blank"
+             :to="{ name: 'router-name', query: {id: 1} }">
+</router-link>
+
+vue判断用户在页面停留时间是否超时
+需求
+当用户停留超过15分钟后，用户提交订单，提示用户超时并重新加载页面
+
+代码
+data () {
+    return {
+        // 超时定时器
+        overTimer: null,
+        // 是否超时
+        isOvertime: false,
+    }
+},
+created () {
+    // 开启定时器
+    this.overTimer = setTimeout(() => {
+      this.isOvertime = true;
+    }, 900000)
+},
+destroyed () {
+    // 销毁定时器
+    clearTimeout(this.overTimer)
+},
+methods: {
+    submitOrder () {
+        // 判定是否超时
+        if (this.isOvertime) {
+            this.$message.error('订单已过期，请重新下单');
+            window.location.reload()
+        }
+    }
+} 
+定时器
+如果方法还未被执行，可以使用 clearTimeout() 来停止计时器。
+如果平时直接用的话，不必清除定时器，clearTimeout是在没执行之前清除定时器
+
+// 设置
+setTimeout(function, milliseconds);
+// 清除
+clearTimeout(id_of_settimeout)
+
+
+
+
+
+
+
+
+
+
+
+
+vue监听浏览器返回
+需求
+我在某个页面用了缓存，假如点击了浏览器返回按钮，需要清除缓存信息
+
+代码
+监听返回
+mounted () {
+    if (window.history && window.history.pushState) {
+        // 向历史记录中插入了当前页
+        history.pushState(null, null, document.URL);
+        window.addEventListener('popstate', this.goBack, false);
+    }
+},
+destroyed () {
+    window.removeEventListener('popstate', this.goBack, false);
+},
+methods: {
+    goBack () {
+        // console.log("点击了浏览器的返回按钮");
+        sessionStorage.clear();
+        window.history.back();
+    },
+} 
+因为这个页面有跳转其他页面的路由，所以在组件的路由钩子里也清了缓存
+
+beforeRouteLeave (to, from , next) {
+    sessionStorage.clear();
+    next()
+},
+禁用返回
+mounted () {
+    if (window.history && window.history.pushState) {
+        // 向历史记录中插入了当前页
+        history.pushState(null, null, document.URL);
+        window.addEventListener('popstate', this.goBack, false);
+    }
+},
+destroyed () {
+    window.removeEventListener('popstate', this.goBack, false);
+},
+methods: {
+    goBack () {
+        // console.log("点击了浏览器的返回按钮");
+        history.pushState(null, null, document.URL);
+    },
+} 
+
+vue路由跳转时定位在页面顶部
+背景
+路由跳转时进入新的页面，但位置却不在顶部，而是在上个页面浏览的位置，在每次进入新页面时，想让它定位在页面的顶部。
+
+代码
+方式一
+main.js
+
+router.beforeEach((to, from, next) => {    
+    // chrome
+    document.body.scrollTop = 0
+    // firefox
+    document.documentElement.scrollTop = 0
+    // safari
+    window.pageYOffset = 0
+    next()
+})
+每次点击分页的时候，页面也会停留在之前浏览的位置，在调完接口后也加入下面几行代码就好了。
+
+// chrome
+document.body.scrollTop = 0
+// firefox
+document.documentElement.scrollTop = 0
+// safari
+window.pageYOffset = 0
+方式二
+router-index.js
+
+const router = new VueRouter({
+  routes: [...],
+  scrollBehavior (to, from, savedPosition) {
+    // return 期望滚动到哪个的位置
+    return { x: 0, y: 0 }
+  }
+})
+
+vue路由懒加载
+路由懒加载
+方式一
+import Vue from 'vue'
+import Router from 'vue-router'
+
+const Index = resolve => require(['@/views/Index'], resolve)
+
+Vue.use(Router)
+const router = new Router({
+  mode: 'history',
+  routes: [{
+    path: '/',
+    name: 'index',
+    component: Index,
+  }]
+})
+export default router
+方式二
+
+import Vue from 'vue'
+import Router from 'vue-router'
+
+const Index = () => import('@/views/Index')
+
+Vue.use(Router)
+const router = new Router({
+  mode: 'history',
+  routes: [{
+    path: '/',
+    name: 'index',
+    component: Index,
+  }]
+})
+export default router
+
+
+vue中当数据为空时的处理
+场景
+对象为空
+要展示的文字信息存在于对象的一个属性中，对象可能为空，属性可能为空，也可能为空字符串，这些情况都显示暂无。
+
+<span>{{propertyShow}}</span>
+data () {
+    return {
+        // 默认值
+        propertyShow: '暂无'
+    }
+}
+当获取到后台的数据后，如果不为空或空字符串，就赋值。
+
+if (res.data.obj !== null) {
+    if (res.data.obj.property !== null) {
+        if (res.data.obj.property.trim() !== '') {
+            this.propertyShow  = res.data.obj.property
+        }
+    }
+}
+
+
+vue持续性拉取后台数据
+代码
+<p v-if="taskStatus==='数据拉取中'">数据拉取中</p>
+data () {
+    return {
+        taskStatus: '',
+        dataTimer: null,
+    }
+},
+created () {
+    // 是否开启定时器
+    if (this.taskStatus === '数据拉取中') {        
+        this.dataTimer = setInterval(() => {
+            // 返回一个状态，如果不是数据拉取中则停止定时器，停止拉取数据
+            this.judgeStatus()
+            // 返回的数据渲染到页面
+            this.showData()            
+        }, 5000)
+    }
+},
+destroyed () {
+    clearInterval(this.dataTimer)
+},
+methods: {
+    judgeStatus () {
+        axios.get('/judgeStatus').then((res) => {
+            if (res.status === 200) {
+                this.taskStatus = res.data.taskStatus
+                if (res.data.taskStatus !== '数据拉取中') {
+                    clearInterval(this.dataTimer)
+                    this.showData()
+                }
+            }            
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
+}
+
+定时器
+
+// 设置
+setInterval(function, milliseconds);
+// 清除
+clearInterval(id_of_setinterval)
+
+js元素聚焦(vue)
+其实聚焦本质上还是调用js的原生方法focus()，也就是说如果你想要某个DOM节点聚焦，只需要它调用这个方法就可以
+
+需求
+当弹窗打开时，自动聚焦到input输入框。
+看似很简单，但是有两个容易出问题的地方：
+一、聚焦的时机
+当弹窗的开关变量为true时，你让相应的元素聚焦，但此时可能弹窗并没有渲染完成
+二、聚焦的元素
+当你使用第三方组件的Input输入框时，你为这个输入框标记了ref，但是获取到的是这个组件，而并不是组件中的input
+而你使用原生的input元素则不会有这个问题
+
+代码
+iView弹窗和输入框
+
+<Modal v-model="modalFocus">
+ <Input type="text" ref="inputFocus" :autofocus="true" v-model="inputValue" ></Input>
+</Modal>
+data () {
+    return {        
+        modalFocus: false,
+        inputValue: '',
+    }
+},
+watch: {
+    modalFocus (val) {        
+        if (val) {
+            this.$nextTick(() => {                
+                this.$refs.inputFocus.$el.children[1].focus()
+            })
+        }
+    },
+},
+
+vue全局注册组件和指令
+区分全局和局部
+全局
+当你注册完之后，可以在任何组件中直接使用标签，而不需要在各个组件中引入并局部注册
+通常公共组件放在src文件夹下的components文件夹中，这里的组件进行全局注册。
+
+局部
+页面中私有的组件放在各自的页面文件夹中并使用下面代码局部注册
+
+import ComponentA from './ComponentA'
+import ComponentB from './ComponentB'
+export default {
+  name: "part",
+  components: { ComponentA, ComponentB },
+}
+全局注册方法
+1、在src文件夹中新建utils文件夹，utils文件夹中一般存放通用的辅助文件(方法、数据等)
+2、在文件夹中新建components.js文件
+3、在components.js文件引入所有要注册的全局组件
+4、在main.js中引入components.js文件并使用Vue.use()全局注册
+
+代码
+utils - components.js
+
+import ComponentA from '@/components/ComponentA' // ComponentA
+import ComponentB from '@/components/ComponentB' // ComponentB
+
+export default (Vue)=>{
+  Vue.component("ComponentA", ComponentA)
+  Vue.component('ComponentB', ComponentB)  
+}
+main.js
+
+import components from '@/utils/components.js'
+Vue.use(components)
+
+new Vue({
+  // ...
+})
+使用
+<component-a></component-a>
+指令
+全局指令的注册方法同全局组件
+1、在src文件夹中新建utils文件夹，utils文件夹中一般存放通用的辅助文件(方法、数据等)
+2、在文件夹中新建directives.js文件
+3、在directives.js文件引入所有要注册的全局指令
+4、在main.js中引入directives.js文件并使用Vue.use()全局注册
+
+代码
+utils - directives.js
+
+export default (Vue)=>{
+    Vue.directive("focus", {
+        inserted: function (el) {
+            el.focus();
+        }
+    })
+}
+main.js
+
+import directives from '@/utils/directives.js'
+Vue.use(directives)
+
+new Vue({
+  // ...
+})
+
+js文件中引用vue实例对象
+原因
+我使用了iView的框架，想要把表格的配置提取出来，但是表格里面的操作需要用到this，所以就需要在js文件中引用vue实例。
+
+方法
+utils - local-data.js
+
+// vue实例
+let newVue = {
+  obj: null
+}
+// iView表格部分代码，将columns暴露出去，在需要的地方引入
+{
+    title: '操作',
+    key: 'operatorCode',
+    align: 'center',
+    width: 200,
+    render: (h, params) => {
+        return h('div', [
+            h('Button', {
+                props: {
+                    type: 'text',
+                    size: 'small'
+                },
+                style: {
+                    color: '#FC9153'
+                },
+                on: {
+                    click: () => {
+                      newVue.obj.getDetail(params.row.id)
+                    }
+                }
+            }, '详情'),                
+            // ...   
+        ]);
+    }
+}
+
+export { newVue }
+使用表格的组件
+
+import { newVue } from '@/utils/local-data'
+created () {
+  newVue.obj = this
+},
+
+
+vue中data使用this
+思路
+一般都是对象中的属性或者对象里的方法
+在data中将对象设置为空，在created生命周期中再对此对象赋值
+
+代码
+data () {
+  return {
+    name: 'lee',
+    option: {}
+  }
+},
+created () {
+  let that = this
+  this.option = {
+    name: that.name,
+    getName: function () {
+      that.getName()
+    }
+  }
+},
+methods: {
+  getName () {
+    console.log(this.name)
+  }
+}
+
+前端HTML页面转PDF（html2canvas+jspdf）
+方式一 vue
+安装
+npm install --save html2canvas
+npm install jspdf --save
+代码
+utils - htmlToPdf.js
+
+// 导出页面为PDF格式
+import html2Canvas from 'html2canvas'
+import JsPDF from 'jspdf'
+export default{
+  install (Vue, options) {
+    Vue.prototype.getPdf = function () {
+      var title = this.htmlTitle
+      html2Canvas(document.querySelector('#pdfDom'), {
+        allowTaint: true
+      }).then(function (canvas) {
+        let contentWidth = canvas.width
+        let contentHeight = canvas.height
+        let pageHeight = contentWidth / 592.28 * 841.89
+        let leftHeight = contentHeight
+        let position = 0
+        let imgWidth = 595.28
+        let imgHeight = 592.28 / contentWidth * contentHeight
+        let pageData = canvas.toDataURL('image/jpeg', 1.0)
+        let PDF = new JsPDF('', 'pt', 'a4')
+        if (leftHeight < pageHeight) {
+          PDF.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight)
+        } else {
+          while (leftHeight > 0) {
+            PDF.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
+            leftHeight -= pageHeight
+            position -= 841.89
+            if (leftHeight > 0) {
+              PDF.addPage()
+            }
+          }
+        }
+        PDF.save(title + '.pdf')
+      }
+      )
+    }
+  }
+}
+main.js
+
+import htmlToPdf from '@/utils/htmlToPdf'
+Vue.use(htmlToPdf)
+使用
+<div id="pdfDom">导出部分</div>
+<button type="button" @click="getPdf()">导出PDF</button>
+export default {
+  data () {
+      return {
+        htmlTitle: 'PDF文件名'
+      }
+  }
+}
+优化
+1、如果在多个页面使用，给函数定义一个参数，参数为要导出页面部分的id。
+
+document.querySelector('#pdfDom')
+将'#pdfDom'替换为参数即可
+2、将导出文件的名称也作为参数传入函数
+
+
+vue-happy-scroll滚动条插件
+安装
+npm install vue-happy-scroll --save-dev
+全局注册
+import HappyScroll from 'vue-happy-scroll'
+import 'vue-happy-scroll/docs/happy-scroll.css'
+Vue.use(HappyScroll)
+使用
+组件
+<!-- 外层盒子，在这里限制宽和高 -->
+<div style="height:200px;width:300px;background-color:#ccc;">
+    <!-- 这里的标签名称要和main.js文件中定义的组件名称保持一致 -->
+    <happy-scroll color="rgba(0,0,0,0.5)" size="5">
+        <!-- 内层盒子——内容区 -->
+        <div class="con">
+            <p>内容项</p>
+            <p>内容项</p>
+            <p>内容项</p>     
+        </div>
+    </happy-scroll>
+</div>
+属性
+颜色：color属性
+<happy-scroll color="rgba(51,51,51,0.2)">
+  <!-- 你的内容 -->
+</happy-scroll>
+<!-- 建议使用rgba，也可以使用英文单词等 -->
+<happy-scroll color="red">
+</happy-scroll>
+粗细：size属性
+  <happy-scroll size="8">
+    <!-- 你的内容 -->
+  </happy-scroll>
+监听容器大小变化：resize属性
+<happy-scroll resize>
+  <!-- 你的内容 -->
+</happy-scroll>
+
+https://github.com/surmon-china/vue-awesome-swiper/blob/master/examples/31-thumbs-gallery-loop.vue
+
+
+https://www.jianshu.com/p/3e0ec1588160
+
+轮播图
+
+Vue
+缩略图控制循环（级联）
+1.npm安装vue-awesome-swiper
+
+npm install vue-awesome-swiper --save
+2.全局挂载，在main.js中添加
+
+import VueAwesomeSwiper from 'vue-awesome-swiper'
+import 'swiper/dist/css/swiper.css'
+Vue.use(VueAwesomeSwiper)
+3.组件内复制修改代码
+缩略图控制循环
+4.修改样式和配置
+
+direction: 'vertical',
+封装全屏轮播图
+<template>
+  <div class="banner-self">
+    <swiper :options="swiperOption" class="swiper-box" ref="mySwiper">
+        <swiper-slide class="swiper-item" v-for="item in bannerList" :key='item.id'>
+            <div class="banner" :style="{
+                backgroundImage: 'url(' + item.pcBannerImg + ')'
+            }">
+            </div>
+        </swiper-slide>                        
+    </swiper>
+    <!-- <div class="banner" :style="style"></div> -->
+    <div class="circle">            
+        <p class="title_ch">{{titleCh}}</p>
+        <p class="title_bar"></p>
+        <p class="title_en">{{titleEn}}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from "@/api/api"
+export default {
+  name: 'bannerSelf',
+  data () {
+    return {
+        bannerList: [],
+        swiper: null,
+        swiperOption: {
+            direction: 'horizontal',
+            slidesPerView: 1,
+            spaceBetween: 0,
+            mousewheel: false,
+            autoHeight: false,
+            resistanceRatio: 0,
+            on: {
+                slideChangeTransitionEnd: function () {
+                    // alert(this.activeIndex);//切换结束时，告诉我现在是第几个slide
+                },
+            },
+        }
+    }
+  }, 
+    props: {
+        imgUrl: {
+          type: String,
+          required: true,          
+        }, 
+        titleCh: {
+          type: String,
+          default: '中文'        
+        },
+        titleEn: {
+          type: String,
+          default: 'ENHLISH'        
+        }, 
+        bannerType: {
+            type: Number,
+            default: 0,
+            // required: true, 
+        },    
+    },
+    methods: {
+        getBannerList() {            
+            const params = {
+                bannerType: this.bannerType
+            }
+            api.home.banner(params).then(res => {                            
+                if (res.status == 200) {
+                    this.bannerList = res.data                    
+                }
+            })            
+        },
+    },
+    computed: {
+        style() {
+            return {
+                backgroundImage: 'url(' + this.imgUrl + ')'
+            }
+        },
+        // bannerList () {
+        //     return [
+        //         {
+        //             pcBannerImg: this.imgUrl
+        //         },
+        //         {
+        //             pcBannerImg: this.imgUrl
+        //         },
+        //     ]
+        // }
+    },
+    watch: {
+        bannerType: {
+            handler (newValue, oldValue) {
+    　　　　　　if (newValue) {                    
+                    this.getBannerList()
+                }
+    　　　　 },
+            immediate: true
+        }
+    }
+}
+</script>
+
+<style lang="less" scoped>
+.banner-self {
+    width: 100%;
+    height: 100%;
+}
+.swiper-box {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+.banner {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+.circle {
+    display: inline-block;
+    width: 6.8rem;
+    height: 6.8rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto;
+    text-align: center;
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 3px solid hsla(0,0%,100%,.4);
+    .title_ch {
+        margin-top: 1.9rem;
+        font-size: 0.72rem;
+        color: #ffffff;
+    }
+    .title_en {
+        font-size: 0.4rem;
+        color: #ffffff;
+    }
+    .title_bar {
+        margin: 0.34rem auto;
+        width: 3.6rem;
+        height: 2px;
+        background-color: #fff;
+        opacity: 0.67;
+    }
+}
+</style>
+轮播图和其他区域联动
+思想：当悬浮文章标题时，显示对应的轮播图。使用鼠标悬浮事件，让轮播图滑动到对应的图片。
+
+<template>
+    <div class="container clearfix">
+        <div class="main-left fl">
+            <swiper :options="swiperOption" class="swiper-box" ref="mySwiper">
+                <swiper-slide class="swiper-item" v-for="item in newsList" :key='item.id'>
+                    <div class="banner" :style="{
+                        backgroundImage: 'url(' + item.thumbnail + ')'
+                    }">
+                    </div>
+                </swiper-slide>                        
+            </swiper>
+        </div>
+        <div class="main-right fr">
+            <div class="main-content">
+                <h2 class="page-tilte">新闻资讯</h2>
+                <h3 class="page-subtilte">NEWS</h3>
+                <ul @mouseover="slideStop" @mouseout="slideStart">
+                    <li class="item" v-for="(item, index) in newsList" :key="item.id">
+                        <h3 class="article-title" :class="slideIndex === index?'article-title-active':''" @click="toDetail(item.id)" @mouseover="changeSlide(index)">{{item.articleTitle}}</h3>                        
+                        <div class="bottom clearfix">
+                            <span class="time fl">{{item.updateTime}}</span>
+                            <a class="fr to-detail" @click="toDetail(item.id)">查看详情</a>
+                        </div>
+                    </li>                    
+                </ul>     
+                <span class="more" @click="toList">更多&gt;</span>                           
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import api from "@/api/api"
+import allIcon from '@/utils/local-img'
+export default {
+    data() {
+        return {
+            allIcon: allIcon,
+            newsList: [],
+            slideIndex: 0,
+            // swiper: null,
+            swiperOption: {}
+        }
+    },
+    created () {
+        this.initSlide()
+        this.getNewsList()        
+    },
+    methods: {
+        // 获取列表
+        getNewsList () {
+            api.home.newsList().then(res => {
+                if (res.status == 200) {
+                    res.data.list.forEach((item) => {
+                        item.updateTime = this.$moment(item.updateTime).format('YYYY/MM/DD')
+                    })
+                    this.newsList = res.data.list
+                }
+            })            
+        },
+        // 跳转新闻
+        toList () {
+            this.$router.push({
+                path: '/news',                          
+            })
+        },
+        toDetail (id) {
+           this.$router.push({
+                path: '/newsDetail',
+                query: {
+                    id: id
+                }                
+            }) 
+        },
+        /**
+         * @desc 轮播图-----------------------------------------
+         */
+        // 初始化
+        initSlide () {
+            let that = this
+            that.swiperOption = {
+                autoplay: {
+                    delay: 1500,
+                    stopOnLastSlide: false,
+                    disableOnInteraction: true,
+                },
+                direction: 'horizontal',
+                slidesPerView: 1,
+                spaceBetween: 0,
+                mousewheel: false,
+                autoHeight: false,
+                resistanceRatio: 0,
+                on: {                    
+                    slideChangeTransitionEnd: function () {
+                        // alert(this.activeIndex);//切换结束时，告诉我现在是第几个slide
+                        that.slideIndex = this.activeIndex
+                    },
+                },
+            }
+        },
+        // 改变轮播
+        changeSlide (index) {            
+            this.swiper.slideTo(index, 1000, false)
+        },
+        // 自动轮播暂停
+        slideStop () {
+            this.swiper.autoplay.stop();
+        },
+        // 自动轮播开启
+        slideStart () {
+            this.swiper.autoplay.start();
+        },
+    },    
+    computed: {
+        swiper () {
+            return this.$refs.mySwiper.swiper
+        },
+        style() {
+            return {
+                backgroundImage: 'url(' + allIcon.home.news + ')'
+            }
+        }
+    }
+}
+</script>
+<style lang="less" scoped>
+// 左右布局
+.main-left {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+.container {
+  height: 100%;
+  overflow: hidden;
+}
+.main-left {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+.main-right {
+  width: 50%;
+  display: flex;  
+//   align-items: center;
+//   justify-content: center;
+}
+// 主体内容
+.main-content {
+    position: relative;
+    width: 100%;  
+    // height: 5rem;  
+    padding: 1.4rem 2rem 0 1.4rem;
+    // padding-top: 1.5rem;
+}
+.page-tilte {  
+  font-size: 0.34rem;
+  color: #333;  
+//   font-weight: bold;  
+}
+.page-subtilte {
+    font-size: 0.2rem;
+    color: #c4c4c4;  
+    margin-bottom: 0.4rem;
+}
+// 列表项
+.item {
+    margin-bottom: 0.3rem;
+}
+.article-title {  
+    cursor: pointer;
+    font-size: 0.2rem;
+    color: #686868;  
+    line-height: 0.3rem;
+    // margin-bottom: 5px;
+    text-align: justify;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover {
+        color: #FF7D41;
+    }
+}
+.article-title-active {
+    color: #FF7D41;
+}
+
+.bottom {  
+  font-size: 0.14rem;
+  color: #b3b3b3;  
+  line-height: 0.3rem;
+}
+// .time {
+//     font-size:12px;
+// }
+.to-detail {
+  color: #FF7D41;
+}
+// 更多
+.more {  
+    cursor: pointer;
+    position: absolute;
+    font-size: 0.18rem;
+    color: #FF7D41; 
+    top: 1.2rem;
+    right: 2rem; 
+}
+
+.swiper-box {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+.banner {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+</style>
+
+参考
+swiper demo
+https://links.jianshu.com/go?to=https%3A%2F%2Fsurmon-china.github.io%2Fvue-awesome-swiper%2F
+
+swiper github
+https://links.jianshu.com/go?to=https%3A%2F%2Fgithub.com%2Fsurmon-china%2Fvue-awesome-swiper
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+vue+vue-router+vuex实现动态面包屑
+
+lesdom
+0.16
+2019.01.15 00:03:05
+字数 535
+阅读 1,941
+一、路由固定数据
+方式一
+步骤一 提取面包屑数据
+1、在src文件夹下新建utils文件夹(存放通用辅助文件)
+2、在utils文件夹下新建local-data.js(存放本地数据)
+3、在local-data.js文件中定义一个对象存放面包屑数据
+utils - local-data.js
+
+/*-------------------------router面包屑-start---------------------------------------*/
+const routerBreadcrumb = {
+  // 内容管理-文章管理
+  articleList: {
+    list: [
+      {name: "内容管理", path: ""},
+      {name: "文章管理", path: "/articleList"}
+    ]
+  },
+  articleDetail: {
+    list: [
+      {name: "内容管理", path: ""},
+      {name: "文章管理", path: "/articleList"},
+      {name: "编辑", path: "/articleDetail"}
+    ]
+  },
+  // 内容管理-首页管理
+  indexList: {
+    list: [
+      {name: "内容管理", path: ""},
+      {name: "首页管理", path: "/indexList"}
+    ]
+  },  
+}
+/*-------------------------router面包屑-end---------------------------------*/
+
+export {
+    routerBreadcrumb,
+    // ...
+}
+步骤二 将面包屑数据引入路由
+router - index.js
+
+import {routerBreadcrumb} from '@/utils/local-data'
+// ...
+const router = new Router({
+  mode: 'history',
+  routes: [
+    // 文章
+    {
+      path: '/articleList',
+      name: 'articleList',
+      component: articleList,
+      meta: {
+        list: routerBreadcrumb.articleList.list
+      }
+    },
+    {
+      path: '/articleDetail',
+      name: 'articleDetail',
+      component: articleDetail,
+      meta: {
+        list: routerBreadcrumb.articleDetail.list
+      }
+    },
+    // 首页
+    {
+      path: '/indexList',
+      name: 'indexList',
+      component: indexList,
+      meta: {
+        list: routerBreadcrumb.indexList.list
+      }
+    },
+  ]
+})
+步骤三 在vuex中定义组件的面包屑数据和改变面包屑数据的方法
+store - index.js
+
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex)
+
+const state = {
+  breadcumb: {}, // 面包屑
+}
+const mutations = {
+  // 赋值面包屑
+  changeBreadcumb (state, value) {
+    state.breadcumb = value
+  },
+}
+
+export default new Vuex.Store({
+  state,
+  mutations,
+})
+步骤四 在路由中将本地面包屑数据赋值给vuex的组件面包屑数据
+router - index.js
+
+import store from '@/store'
+
+const router = new Router({
+  mode: 'history',
+  routes: []
+})
+router.beforeEach((to, from, next) => {
+  if (to.meta.list) {
+    let list = to.meta.list
+    store.commit('changeBreadcumb', { list })
+  }
+  next()
+})
+export default router
+步骤五 封装面包屑组件
+components - BreadcrumbSelf.vue
+html
+
+  <div class="breadcumb">
+    <div class="breadcumb-list">
+      <div v-for="(item, i) in breadcumb.list" :key="i" class="breadcumb-link" :class="{last: i == breadcumb.list.length -1}">
+        <router-link :to="{path: item.path}">{{item.name}}</router-link>
+        <span v-if="i < breadcumb.list.length - 1"> &gt; </span>
+      </div>
+    </div>
+  </div>
+js
+
+    import { mapState } from 'vuex'
+    export default {
+      name: "breadcrumb-self",
+      computed: {
+        ...mapState(['breadcumb'])
+      }
+    }
+css
+
+  @baseColor: #fc9153;
+  .breadcumb{
+    margin-bottom: 22px;
+    .breadcumb-list {
+      .breadcumb-link{
+        display: inline-block;
+        a{
+          color: #666;
+          font-size: 12px;
+        }
+        span{
+          padding: 0 3px;
+        }
+        &.last{
+          a{
+            color: @baseColor
+          }
+        }
+      }
+    }
+  }
+步骤六 使用面包屑组件
+这里有两种使用方式，一种是只在一个固定的位置使用面包屑组件，另一种是在每个页面中使用面包屑组件，看设计的方式。如果在多个页面使用的话，全局注册一下即可。
+
+番外 各个详情的返回按钮也可以按上述方式使用
+返回步骤一：数据
+utils - local-data.js
+
+  articleDetail: {
+    back: {name: "返回", path: "/articleList"},
+    list: [
+      {name: "内容管理", path: ""},
+      {name: "文章管理", path: "/articleList"},
+      {name: "编辑", path: "/articleDetail"}
+    ]
+  },
+返回步骤二：路由
+router - index.js
+
+    {
+      path: '/articleDetail',
+      name: 'articleDetail',
+      component: articleDetail,
+      meta: {
+        list: routerBreadcrumb.articleDetail.list,
+        back: routerBreadcrumb.articleDetail.back,
+      }
+    },
+返回步骤三：vuex
+store - index.js
+
+const state = {
+  breadcumb: {}, // 面包屑
+  back: {},// 返回路径
+}
+const mutations = {
+  // 赋值面包屑
+  changeBreadcumb (state, value) {
+    state.breadcumb = value
+  },
+  // 赋值返回按钮
+  changeBack (state, value) {
+    state.back = value
+  },
+}
+返回步骤四：路由使用方法赋值
+router - index.js
+
+import store from '@/store'
+
+const router = new Router({
+  mode: 'history',
+  routes: []
+})
+router.beforeEach((to, from, next) => {
+  if (to.meta.list) {
+    let list = to.meta.list
+    store.commit('changeBreadcumb', { list })
+  }
+  if (to.meta.back) {
+    let back = to.meta.back
+    store.commit('changeBack', { back })
+  }
+  next()
+})
+export default router
+返回步骤五：封装返回组件
+components - GoBack.vue
+html
+
+<div class="go_back">
+   <router-link :to="{path: back.back.path}">&lt;&lt;{{back.back.name}}</router-link>
+</div>
+js
+
+  import { mapState } from 'vuex'
+  export default {
+    name: "go-back",
+    computed: {
+      ...mapState(['back'])
+    },
+  }
+返回步骤六：使用
+全局注册，直接使用。
+
+二、路由固定数据+非路由动态数据
+更加灵活
+
+步骤一 在vuex中定义组件的面包屑数据和改变面包屑数据的方法
+store - index.js
+
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex)
+
+const state = {
+  breadcumb: {
+    isShow: false,
+    list: []
+  }, // 面包屑
+}
+const mutations = {
+  // 赋值面包屑
+  changeBreadcumb (state, value) {
+    state.breadcumb = value
+  },
+}
+
+export default new Vuex.Store({
+  state,
+  mutations,
+})
+步骤二 封装面包屑组件
+components - BreadcrumbSelf.vue
+html
+
+  <div class="breadcumb" v-show="breadcumb.isShow">
+    <div class="breadcumb-list">
+      <div v-for="(item, i) in breadcumb.list" :key="i" class="breadcumb-link" :class="{last: i == breadcumb.list.length -1}">
+        <router-link :to="{path: item.path}">{{item.name}}</router-link>
+        <span v-if="i < breadcumb.list.length - 1"> &gt; </span>
+      </div>
+    </div>
+  </div>
+js
+
+    import { mapState } from 'vuex'
+    export default {
+      name: "breadcrumb-self",
+      computed: {
+        ...mapState(['breadcumb'])
+      }
+    }
+css
+
+  @baseColor: #fc9153;
+  .breadcumb{
+     height: 48px;
+     line-height: 48px;
+    .breadcumb-list {
+      .breadcumb-link{
+        display: inline-block;
+        a{
+          color: #666;
+          font-size: 12px;
+        }
+        span{
+          padding: 0 3px;
+        }
+        &.last{
+          a{
+            color: @baseColor
+          }
+        }
+      }
+    }
+  }
+步骤三 使用面包屑组件
+将面包屑组件放在指定位置，在各个组件中填充数据并控制显示，动态数据方法使用如下，在调取接口获取到动态数据后，将参数传递，调用方法。（非动态数据方法同理，不显示面包屑同理）
+
+// 面包屑
+setBreadcumb (projectName) {
+  let list = [
+    {name: "测评模块", path: ""},
+    {name: "项目", path: "/measure/project"},
+    {name: projectName, path: ""},
+  ]
+  let isShow = true
+  this.$store.commit('changeBreadcumb', { isShow, list })
+},
+网站导航
+
+Vue纯净版开发环境(使用vue-cli@3创建)
+https://github.com/alex-guan/vue_base
+
+
+
+
+cd /app/gitrepo
+mkdir vuesample.git                                                         
+cd vuesample.git
+git init --bare
+
+git remote add origin ssh://git@wine-sha.vicp.net:36353/app/gitrepo/vuesample.git
+git push --set-upstream origin master

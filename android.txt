@@ -1,0 +1,148 @@
+android系统分享功能
+将自己的APK加入可分分享的应用列表
+
+第一步:在Manifest.xml进行配置,比普通的activity中多增加一个Intent过滤器
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.example.share.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+ 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            
+            <intent-filter>
+	       			<action android:name="android.intent.action.SEND"/>
+	        			<category android:name="android.intent.category.DEFAULT"/>
+						<!-- 	指定分享类型,我这边只能分享video/mp4,image/* -->
+	            		<data android:mimeType="video/mp4"/>
+                        <data android:mimeType="image/*" />
+   			 </intent-filter>  
+        </activity>
+    </application>
+
+第二步:用户分享的时候如果选择了我们的app,会跳转到对应的activity,在avtivity中获取文件路径。然后做我们想做的事情
+
+public class MainActivity extends Activity {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+	    super.onCreate(savedInstanceState);
+	    setContentView(R.layout.activity_main);
+		
+	    TextView pathTextView=(TextView) findViewById(R.id.path);
+		
+            Intent intent = getIntent();
+            String action = intent.getAction();//action
+            String type = intent.getType();//类型
+        
+            //类型
+            if (Intent.ACTION_SEND.equals(action) && type != null /*&& "video/mp4".equals(type)*/) {
+                Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                //如果是媒体类型需要从数据库获取路径
+                String filePath=getRealPathFromURI(uri);
+                pathTextView.setText("文件路径:"+filePath);
+            }
+	}
+	
+	/**
+	 * 通过Uri获取文件在本地存储的真实路径
+	 */
+	private String getRealPathFromURI(Uri contentUri) {
+		String[] proj = {MediaStore.MediaColumns.DATA};
+		Cursor cursor=getContentResolver().query(contentUri, proj, null, null, null);
+		if(cursor.moveToNext()){
+			return cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DATA));
+		}
+		cursor.close();
+		return null;
+	}
+}
+
+
+如果需要分享多个文件怎么办?
+
+答:修改 Manifest.xml中activity中Intent中action的android:name属性   
+
+   	  <intent-filter>
+		<!--   支持多个文件分享 -->
+	        <action android:name="android.intent.action.SEND_MULTIPLE"/>
+	        <category android:name="android.intent.category.DEFAULT"/>
+		<!-- 	指定分享类型,我这边只能分享mp4 -->
+	        <data android:mimeType="video/mp4"/>
+   	  </intent-filter>
+
+
+
+=========================================================================
+分享是调起系统分享接口，是拿不到分享成功与否的状态的，并且分享到其他APP了之后一般不会带有来源自xxxAPP的这种标识，因为对方应用不知道分享是来源自什么地方什么应用。
+
+分享主要是根据文件的类型进行划分，有图片、视频、音频、文字等常见类型，也有所有的文件类型，即：（*/*）
+
+常见的几种类型：(text/plain)、(image/*)、(audio/*)、(video/*)、(*/*)
+
+接收分享
+1、新建一个Activity，这里叫ShareReceiveActivity，并在AndroidManifest里面注册它，然后根据类型，加上相关的配置代码，具体如下：
+
+<activity android:name=".module.share.ShareReceiveActivity">
+    <intent-filter>
+	<action android:name="android.intent.action.SEND" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="*/*" />
+    </intent-filter>
+    <intent-filter>
+	<action android:name="android.intent.action.SEND_MULTIPLE" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="*/*" />
+    </intent-filter>
+    <intent-filter>
+	<action android:name="android.intent.action.SEND" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="audio/*" />
+    </intent-filter>
+    <intent-filter>
+	<action android:name="android.intent.action.SEND_MULTIPLE" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="audio/*" />
+    </intent-filter>
+    <intent-filter>
+	<action android:name="android.intent.action.SEND" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="video/*" />
+    </intent-filter>
+    <intent-filter>
+	<action android:name="android.intent.action.SEND_MULTIPLE" />
+	<category android:name="android.intent.category.DEFAULT" />
+	<data android:mimeType="video/*" />
+    </intent-filter>
+</activity>
+2、配置好了之后，往用于接收分享的Activity的onCreate方法里面加接收代码：
+
+Intent intent = getIntent();
+String action = intent.getAction();
+String type = intent.getType();
+
+if (Intent.ACTION_SEND.equals(action) && type != null) {
+    Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+    if ("audio/".equals(type)) {
+	// 处理发送来音频
+	ToastUtils.showToast(getContext(),"");
+    } else if (type.startsWith("video/")) {
+	// 处理发送来的视频
+    } else if (type.startsWith("*/")) {
+	//处理发送过来的其他文件
+    }
+} else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null) {
+    ArrayList<Uri> arrayList = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+    if (type.startsWith("audio/")) {
+	// 处理发送来的多个音频
+    } else if (type.startsWith("video/")) {
+	//处理发送过来的多个视频
+    } else if (type.startsWith("*/")) {
+	//处理发送过来的多个文件
+    }
+}

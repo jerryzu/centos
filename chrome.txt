@@ -1,0 +1,3 @@
+方式一：开启Chrome自带的并行下载功能
+
+在地址栏输入 chrome://flags/,然后在搜索框中输入 Parallel downloading，选择enabled，重启Chrome

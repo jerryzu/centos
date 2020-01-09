@@ -1,0 +1,357 @@
+npm install iview --save
+在vue项目的入口文件里全局引入:
+import iView from 'iview';
+import 'iview/dist/styles/iview.css'; // ./node_modules/iview/dist/styles/iview.css
+
+
+<i-table border :content="self" :columns="columns" :data="giftCardsList"></i-table>
+首先来看几个最常用的
+
+1）content：设置单元格内渲染自定义组件时的上下文。比如父级是 $parent，根组件是 $root，当 i-table 作为一个 slot 封装在其它组件里时，会很有用；这里我用的是self，在data中我return了一个默认值，就是self: this。意思就是把this指向的对象复制一份给self，这样可避免this指向问题出现
+2）columns：表格列的配置描述，下面给出JS代码便可理解
+3）data：显示的结构化数据
+
+
+export default {
+    data() {
+      return {             
+        giftCardsList: [],      
+        self: this,
+        columns:[
+          {
+            title:'Id',
+            type: 'index',
+            width: 60,
+            align: 'center'
+          },
+          {
+            title: '优惠券名称',
+            key: 'name',
+            align: 'center'
+          },
+          {
+              title: '类型',
+              key: 'extent',
+              align: 'center'
+          },
+          {
+              title: '兑换内容',
+              key: 'days',
+              align: 'center'
+          },
+          {
+            title: '有效期',
+            key:'start_at',
+            align: 'center',
+          },
+          {
+            title:'已使用',
+            key:"use",
+            align: 'center',
+          },
+          {
+            title:"剩余库存",
+            key:"last",
+            align: 'center'
+          },
+          {
+            title:"使用率",
+            key:"use_tate",
+            align: 'center'
+          },
+          {
+            title:"状态",
+            key:"status",
+            align: 'center'
+          },
+          {
+            title:"操作",
+            key:"actor",
+            align:'center',
+            render: (h, params) => {
+              if(this.giftCardsList[params.index].status === '进行中'){
+                return h('div', [
+                    h('Button', {
+                        props: {
+                            type: 'primary',
+                            size: 'small'
+                        },
+                        style: {
+                            marginRight: '5px'
+                        },
+                        on: {
+                            click: () => {
+                                this.$router.push({ path: '../marketing_manage/add_gift_card?gcid=' + this.giftCardsList[params.index].gcid});
+                            }
+                        }
+                    }, '编辑'),
+                    h('Button', {
+                        props: {
+                            type: 'error',
+                            size: 'small'
+                        },
+                        on: {
+                            click: () => {
+                                this.popupIsShow = true; 
+                                this.gcid = this.giftCardsList[params.index].gcid;
+                            }
+                        }
+                    }, '使失效')
+                ]);
+              }else{
+                return h('div', [
+                    h('Button', {
+                        props: {
+                            type: 'primary',
+                            size: 'small'
+                        },
+                        on: {
+                            click: () => {
+                                this.$router.push({ path: '../marketing_manage/gift_card_warehouse?gcid=' + this.giftCardsList[params.index].gcid});
+                            }
+                        }
+                    }, '码库')
+                ]);
+              }
+            }
+          }
+        ],
+      }
+    },
+
+
+
+引入iview之后该怎么实现导出数据：
+
+<i-table height="660" border :content="self" :columns="columns" :data="warehouseList" ref="table" @on-selection-change="gccidArr"></i-table>
+
+1）需要在Table的第一列新增一个复选框，用于选中项
+  columns:[
+        {
+          type: 'selection',
+          width: 50,
+          align: 'center',
+        },
+        {
+          title:'id',
+          key: 'id',
+          width: 100,
+          align: 'center',
+        },
+        {
+          title: '兑换码',
+          key: 'gccid',
+          align: 'center'
+        },
+        {
+            title: '会费名称',
+            key: 'name',
+            align: 'center'
+        },
+        {
+            title: '类型',
+            key: 'extent',
+            align: 'center'
+        },
+        {
+          title: '有效期',
+          key:'start_at',
+          align: 'center',
+        },
+        {
+          title:'使用人',
+          key:"username",
+          align: 'center',
+        },
+        {
+          title:"兑换时间",
+          key:"use_at",
+          align: 'center'
+        },
+        {
+          title:"状态",
+          key:"status",
+          align: 'center'
+        }
+      ],
+
+methods里面定义gccidArr
+    gccidArr(selection){
+      this.selection = selection;
+    },
+
+注意：这里的数据是一行的数据，不是某一个具体的值，而且selection的数据类型是数组。如果想要获取，可以在columns里面新增一个render方法，或者新建一个空的数组dataArr，利用this.selection.forEach(ele => {dataArr.push(ele.id)})即可，也就是将获取到的每条数据里的某一个值（比如id，title等）存进一个新建的数组中。
+
+5）选中之后并保存在内存中，但是我们到底要怎么导出呢？而导出的数据恰好是我们所选中的呢？
+首先肯定要新增一个导出的按钮，如HTML代码：
+
+<i-table height="660" border :content="self" :columns="columns" :data="warehouseList" ref="table" @on-selection-change="gccidArr"></i-table>
+<i-button style="margin-top:10px" type="primary" size="large" @click="exportData()"><Icon type="ios-download-outline"></Icon> 导出数据 </i-button>
+这个i-button也是iview应用之一，大家可自行官网了解。
+同样的，要在methods里定义一个名为exportData的方法，导出数据JS代码如下：
+
+    exportData: function(){
+      let self = this;
+      this.$refs.table.exportCsv({
+          filename: '码库',
+          original: false, 
+          columns: self.columns,
+          data: self.selection
+      });
+    },
+
+6）可能会有童鞋会问，要是有些数据是不可选中的呢？意思就是我要想某些行数据的前面没有复选框，那该怎么实现？
+
+这个问题其实也好解决，只需要将前面的复选框失效就好了，就是不能点击的状态，那么用iview怎么实现呢？
+
+大家可看官网里这样的介绍：
+
+
+
+意思就是在data对象（就是后台返回的数据，也即应用table里的数据，也就是上文在HTML代码里的:data="warehouseList"里 的warehouseList）里面添加一个属性_disabled，且它的值为true即可，看JS代码：
+
+ 
+    handleDeadline: function(warehouseList){
+      warehouseList.forEach(element => {
+        if(element.status == '0'){
+          element['_disabled'] = true;
+        }
+      });
+      return warehouseList;
+    },
+
+
+就是要达到这种效果，点击图片的时候，会显示正常的图片大小，利用的是iview的Modal标签，出现的问题是这样的，<Modal width="?">其width属性不能给固定的值，忽略这个属性的话，会默认为100%，也就是继承body的宽度，这很显然不行，那么到底该怎么办呢？
+
+代码如下：
+
+HTML：
+
+    <Modal
+        v-model="hImgModal"
+        :width="hImgWidth"
+        @on-cancel="hImgModal=false"
+        :closable="false">
+        <div slot="footer"></div>
+        <img :src=hIma ref="hImg">
+    </Modal>
+JS：
+
+    data() {
+        return {
+            hImgModal:false,//横图
+            hImgWidth:'',//横图宽
+            columns: [//这是iview的用法，key表示的是，每个类型的字段
+                {
+                    type: 'selection',
+                    width: 60,
+                    align: 'center'
+                },
+                {
+                    title: '影片名称',
+                    key: 'name_chs',
+                    align: 'center'
+                },
+                {
+                    title: '海报横图',
+                    key: 'hcover',
+                    align: 'center',
+                    render:(h,params)=>{
+                        let item = this.filmList[params.index]//filmList为后台返回的影视数据
+                        return h('div',[
+                            h('Img',{
+                                attrs:{
+                                    src:item.hcover,
+                                },
+                                style:{
+                                    width: '80px',
+                                    height: '45px',
+                                    margin:'5px',
+                                    cursor:'pointer'
+                                },
+                                on:{
+                                    click:()=>{
+                                        let that = this;
+                                        this.hImgModal=true;
+                                        this.hIma = item.hcover;
+                                        setTimeout(function(){
+                                            that.hImgWidth = that.$refs.hImg.naturalWidth + 30;
+                                        },0)
+                                    }
+                                }
+                            })
+                        ])
+                    }
+                },
+            ],
+        }
+    },
+
+问题：想在表格的一个列中展示多个（不是固定值）button，每个button都会绑定一个事件。
+   {
+          title:'子分类',
+          align: 'center',
+          render: (h, params) => {
+            let item = this.tagslist[params.index];//tagslist是数据列表，每个项目中都包含一个子分类数组
+            let option = h('div',[]);
+            item.sub_tags.forEach((ele,idx) => {//sub_tags才是子分类数组
+              let subOptions = h('Button', {
+                  props: {
+                      type: 'text',
+                      size: 'small',
+                  },
+                  style: {
+                    color: '#1255e2',
+                    margin: '5px',
+                    border: '1px solid #1255e2'
+                  },
+                  on: {
+                      click: () => {
+                          this.pop_remove_subtag(item, ele);//参数可根据实际项目需求取
+                      },
+                  },
+              }, ele.name_chs+' | X');
+              option.children.push(subOptions)
+            })
+            return option;
+        }
+
+上面有个瑕疵，就是利用了字符串' | X'来代替了'关闭'图标，其实在iview中可利用Tag标签来实现的，但是iview有个bug，就是它的关闭事件在刚才我们的这个案例上触发不了。
+
+<template>
+    <Tag v-for="item in count" :key="item" :name="item" closable @on-close="handleClose2">标签{{ item + 1 }}</Tag>
+</template>
+
+ 即上面的on-close事件
+
+比如，将代码改成这样：
+
+      {
+          title:'子分类',
+          align: 'center',
+          render: (h, params) => {
+            let item = this.tagslist[params.index];
+            let option = h('div',[]);
+            item.sub_tags.forEach((ele,idx) => {
+              let subOptions = h('Tag', {
+                  props: {
+                      color: 'default',
+                      closable: true
+                  },
+                  on: {
+                      click: () => {
+                          this.pop_remove_subtag(item, ele);
+                      },
+                      close: () => {
+                          this.pop_remove_subtag(item, ele);
+                      },
+                      onClose: () => {
+                          this.pop_remove_subtag(item, ele);
+                      },
+                  },
+              }, ele.name_chs+' | X');
+              option.children.push(subOptions)
+            })
+            return option;
+        }
+不管是click，还是close，还是onClose都触发不了里面的函数，根本就走不进去！
