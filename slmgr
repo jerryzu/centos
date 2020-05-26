@@ -1,0 +1,11 @@
+C:\Windows\System32>cd /d "%SystemRoot%\system32"
+
+C:\>cd  /d e:/iso
+
+C:\Windows\System32>slmgr -ipk M7XTQ-FN8P6-TTKYV-9D4CC-J462D
+
+C:\Windows\System32>slmgr -ato
+
+C:\Windows\System32>slmgr -skms kms.03k.org
+
+C:\Windows\System32>slmgr -ato
